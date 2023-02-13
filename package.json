@@ -1,0 +1,158 @@
+{
+  "name": "markdownnote",
+  "displayName": "MarkdownNote",
+  "description": "Markdown Note(Editable Preview)",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "categories": [
+    "Notebooks"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "MarkdownNote",
+      "properties": {
+        "markdownnote.webkeybindings": {
+          "type": "object",
+          "description": "MarkdownNote web keybindings",
+          "default": {
+            "undo": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyZ"
+            },
+            "redo": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyY"
+            },
+            "cell-add": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "Enter"
+            },
+            "cell-delete": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "Escape"
+            },
+            "bold": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyB"
+            },
+            "italic": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyI"
+            },
+            "inlinecode": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyK"
+            },
+            "shell": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "F1"
+            },
+            "typescript": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "F2"
+            },
+            "fsharp": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "F3"
+            },
+            "inlinemath": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyN"
+            },
+            "math": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyM"
+            },
+            "url-paste": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyL"
+            },
+            "img-paste": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyP"
+            },
+            "adomonition": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyO"
+            }
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "markdownnote.showNote",
+        "title": "MarkdownNote(EditablePreview): ShowToTheSide"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownnote.showNote",
+          "group": "z_commands"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "install:all": "npm install && npm --prefix ./webview-ui install ./webview-ui",
+    "start:webview": "npm --prefix ./webview-ui run start",
+    "build:webview": "npm --prefix ./webview-ui run build",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.71.0",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "@vscode/test-electron": "^2.1.5",
+    "eslint": "^8.20.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.0.0",
+    "typescript": "^4.8.2",
+    "vsce": "*"
+  }
+}
