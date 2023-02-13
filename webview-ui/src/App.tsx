@@ -702,7 +702,7 @@ mdtextR
     console.log(cells);
 
     cellsStreamNext(cells);
-
+ 
     const f = () => {
 
       sortableR.next(
