@@ -46,6 +46,13 @@ class NotePanel {
         this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
+        const reveal = () => this._panel.reveal(vscode_1.ViewColumn.Two);
+        vscode_1.window.onDidChangeActiveTextEditor(() => {
+            console.log("onDidChangeActiveTextEditor!!!!!");
+            (getFileName() !== "")
+                ? reloadWebview()
+                : undefined;
+        });
     }
     /**
      * Renders the current webview panel if it exists otherwise a new webview panel
@@ -117,9 +124,8 @@ class NotePanel {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Hello World</title>
+          <title>Markdown Notebook Solid</title>
         </head>
         <body>
           <div id="root"></div>
@@ -141,10 +147,6 @@ class NotePanel {
             obj: keybinds
         }));
         vscode.workspace.onDidChangeConfiguration(getConfig);
-        vscode_1.window.onDidChangeActiveTextEditor(() => {
-            console.log("onDidChangeActiveTextEditor!!!!!");
-            reloadWebview();
-        });
         filePathR.map((filePath) => {
             console.log(filePathR.lastVal);
             fs.readFile(filePath, { encoding: "utf8" })

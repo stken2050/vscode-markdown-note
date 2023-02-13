@@ -5,9 +5,6 @@ import { render } from "solid-js/web";
 import 'bootstrap/scss/bootstrap.scss';
 
 
-
-import './css/googlefonts.scss'
-
 import './css/katex.min.css'
 import 'github-markdown-css/github-markdown-light.css';
 
