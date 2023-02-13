@@ -98,7 +98,7 @@ export class NotePanel {
 
     if (NotePanel.currentPanel) {
       // If the webview panel already exists reveal it
-      // reloadWebview();
+      reloadWebview();
       NotePanel.currentPanel._panel.reveal(ViewColumn.Two);
 
     } else {

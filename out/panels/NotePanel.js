@@ -63,7 +63,7 @@ class NotePanel {
     static render(extensionUri) {
         if (NotePanel.currentPanel) {
             // If the webview panel already exists reveal it
-            // reloadWebview();
+            reloadWebview();
             NotePanel.currentPanel._panel.reveal(vscode_1.ViewColumn.Two);
         }
         else {
