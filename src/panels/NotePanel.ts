@@ -99,7 +99,7 @@ export class NotePanel {
     if (NotePanel.currentPanel) {
       // If the webview panel already exists reveal it
       reloadWebview();
-      NotePanel.currentPanel._panel.reveal(ViewColumn.Two);
+      NotePanel.currentPanel._panel.reveal(ViewColumn.Two, true);
 
     } else {
       // If a webview panel does not already exist create and show a new one
@@ -108,7 +108,7 @@ export class NotePanel {
         // Panel view type
         "showNote",
         // Panel title
-        "Markdown Notebook",
+        "Markdown Note",
         // The editor column the panel should be displayed in
         ViewColumn.Two,
         // Extra panel configurations
@@ -121,6 +121,9 @@ export class NotePanel {
       );
 
       NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+
+
+
     }
   }
 
@@ -169,7 +172,7 @@ export class NotePanel {
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Markdown Notebook Solid</title>
+          <title>Markdown Note</title>
         </head>
         <body>
           <div id="root"></div>
