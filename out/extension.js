@@ -5,6 +5,7 @@ const vscode_1 = require("vscode");
 const NotePanel_1 = require("./panels/NotePanel");
 function activate(context) {
     // Create the show hello world command
+    NotePanel_1.NotePanel.render(context.extensionUri);
     const showNoteCommand = vscode_1.commands.registerCommand("markdownnote.showNote", () => {
         NotePanel_1.NotePanel.render(context.extensionUri);
     });
