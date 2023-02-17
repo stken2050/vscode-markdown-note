@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 
 import * as fs from "node:fs/promises";
 
+
 const filePathR = R('');
 const getFileName =
   () => vscode.window.activeTextEditor?.document?.fileName || "";
@@ -57,10 +58,6 @@ export class NotePanel {
    */
   private constructor(panel: WebviewPanel, extensionUri: Uri) {
 
-    getExsitingFileName(getFileName());
-    //------------------------------------
-
-    //-----------------------------------
     this._panel = panel;
     // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
     // the panel or when the panel is closed programmatically)
@@ -72,7 +69,6 @@ export class NotePanel {
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
 
-    const reveal = () => this._panel.reveal(ViewColumn.Two);
 
     window.onDidChangeActiveTextEditor(
       () => {
@@ -83,6 +79,7 @@ export class NotePanel {
           : undefined;
       }
     );
+
 
   }
 
@@ -95,10 +92,16 @@ export class NotePanel {
 
   public static render(extensionUri: Uri) {
 
+    console.log("!!!!!render");
+    console.log(filePathR.lastVal);
+    console.log("!!!!!!!!!!!!!!");
+
+    console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
+
     if (NotePanel.currentPanel) {
       // If the webview panel already exists reveal it
       reloadWebview();
-      NotePanel.currentPanel._panel.reveal(ViewColumn.Two, true);
+      NotePanel.currentPanel._panel.reveal(ViewColumn.Two);
 
     } else {
       // If a webview panel does not already exist create and show a new one
@@ -120,9 +123,9 @@ export class NotePanel {
       );
 
       NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+    };
 
-    }
-  }
+  };
 
   /**
    * Cleans up and disposes of webview resources when the webview panel is closed.
@@ -215,7 +218,9 @@ export class NotePanel {
       );
 
       filePath === ""
-        ? undefined
+        ? vscode.commands
+          .executeCommand("workbench.action.focusFirstEditorGroup")
+
         : (() => {
 
           fs.readFile(filePath, { encoding: "utf8" })

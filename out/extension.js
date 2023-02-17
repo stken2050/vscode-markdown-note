@@ -10,7 +10,6 @@ function activate(context) {
     // Add command to the extension context
     context.subscriptions.push(showNoteCommand);
     f();
-    // setTimeout(f, 1000);
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

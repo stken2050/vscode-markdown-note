@@ -35,9 +35,6 @@ class NotePanel {
      */
     constructor(panel, extensionUri) {
         this._disposables = [];
-        getExsitingFileName(getFileName());
-        //------------------------------------
-        //-----------------------------------
         this._panel = panel;
         // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
         // the panel or when the panel is closed programmatically)
@@ -46,7 +43,6 @@ class NotePanel {
         this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
-        const reveal = () => this._panel.reveal(vscode_1.ViewColumn.Two);
         vscode_1.window.onDidChangeActiveTextEditor(() => {
             console.log("onDidChangeActiveTextEditor!!!!!");
             (getFileName() !== "")
@@ -61,10 +57,14 @@ class NotePanel {
      * @param extensionUri The URI of the directory containing the extension.
      */
     static render(extensionUri) {
+        console.log("!!!!!render");
+        console.log(filePathR.lastVal);
+        console.log("!!!!!!!!!!!!!!");
+        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
         if (NotePanel.currentPanel) {
             // If the webview panel already exists reveal it
             reloadWebview();
-            NotePanel.currentPanel._panel.reveal(vscode_1.ViewColumn.Two, true);
+            NotePanel.currentPanel._panel.reveal(vscode_1.ViewColumn.Two);
         }
         else {
             // If a webview panel does not already exist create and show a new one
@@ -84,7 +84,9 @@ class NotePanel {
             });
             NotePanel.currentPanel = new NotePanel(panel, extensionUri);
         }
+        ;
     }
+    ;
     /**
      * Cleans up and disposes of webview resources when the webview panel is closed.
      */
@@ -161,7 +163,8 @@ class NotePanel {
             console.log("@@ filePathR.lastVal @@@@@@@@@@@");
             console.log(filePath);
             filePath === ""
-                ? undefined
+                ? vscode.commands
+                    .executeCommand("workbench.action.focusFirstEditorGroup")
                 : (() => {
                     fs.readFile(filePath, { encoding: "utf8" })
                         .then(mdText => {
