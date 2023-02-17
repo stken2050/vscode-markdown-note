@@ -9,8 +9,8 @@ const vscode = require("vscode");
 const fs = require("node:fs/promises");
 const filePathR = (0, reactive_monad_1.R)('');
 const getFileName = () => { var _a, _b; return ((_b = (_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document) === null || _b === void 0 ? void 0 : _b.fileName) || ""; };
-const getExsitingFileName = () => (getFileName() !== "")
-    ? filePathR.next(getFileName())
+const getExsitingFileName = (fileName) => (fileName !== "")
+    ? filePathR.next(fileName)
     : filePathR.next(filePathR.lastVal);
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
@@ -35,7 +35,7 @@ class NotePanel {
      */
     constructor(panel, extensionUri) {
         this._disposables = [];
-        getExsitingFileName();
+        getExsitingFileName(getFileName());
         //------------------------------------
         //-----------------------------------
         this._panel = panel;
@@ -126,6 +126,16 @@ class NotePanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Markdown Note</title>
+
+
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
+          integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
+          integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
+          crossorigin="anonymous"></script>
+
+
+
         </head>
         <body>
           <div id="root"></div>
@@ -148,16 +158,21 @@ class NotePanel {
         }));
         vscode.workspace.onDidChangeConfiguration(getConfig);
         filePathR.map((filePath) => {
-            console.log(filePathR.lastVal);
-            fs.readFile(filePath, { encoding: "utf8" })
-                .then(mdText => {
-                webview.postMessage({
-                    cmd: 'load',
-                    obj: mdText
-                });
-            }).catch(err => {
-                console.error(err);
-            });
+            console.log("@@ filePathR.lastVal @@@@@@@@@@@");
+            console.log(filePath);
+            filePath === ""
+                ? undefined
+                : (() => {
+                    fs.readFile(filePath, { encoding: "utf8" })
+                        .then(mdText => {
+                        webview.postMessage({
+                            cmd: 'load',
+                            obj: mdText
+                        });
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                })();
         });
         webview.onDidReceiveMessage((message) => {
             const command = message.command;
@@ -169,7 +184,7 @@ class NotePanel {
                     return;
                 case "requestLoad":
                     console.log('requestLoad!!!!!!!!!!!!!!!!!!!!!');
-                    getExsitingFileName();
+                    getExsitingFileName(getFileName());
                     getConfig();
                     return;
                 case "save":

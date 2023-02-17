@@ -202,9 +202,9 @@ const deletingID = R(0);
 
 const hStyle = idEdit => {
 
-  const f0 = () => {
-    const elEdit = document.getElementById(idEdit);
+  const elEdit = document.getElementById(idEdit);
 
+  const f0 = () => {
     const text = elEdit.innerText;
 
     elEdit.style.font =
@@ -223,7 +223,7 @@ const hStyle = idEdit => {
                   : hFont[0];
   };
 
-  window.setTimeout(f0, 0);
+  window.setTimeout(f0, 100);
 };
 
 const html = id => {
@@ -582,25 +582,25 @@ const App: Component = () => {
       linkColor.forEach(l => l.addEventListener('click', colorLink))
 
       // Your code to run since DOM is loaded and ready
+
+      hFont[0] = getComputedStyle(document.getElementById('p')).font;
+      hFont[1] = getComputedStyle(document.getElementById('h1')).font;
+      hFont[2] = getComputedStyle(document.getElementById('h2')).font;
+      hFont[3] = getComputedStyle(document.getElementById('h3')).font;
+      hFont[4] = getComputedStyle(document.getElementById('h4')).font;
+      hFont[5] = getComputedStyle(document.getElementById('h5')).font;
+      hFont[6] = getComputedStyle(document.getElementById('h6')).font;
+
+      hFont['bold'] = getComputedStyle(document.getElementById('bold')).font;
+      hFont['italic'] = getComputedStyle(document.getElementById('italic')).font;
+
+
+      vscode.postMessage({
+        command: "requestLoad",
+        text: "",
+      });
     });
 
-
-    hFont[0] = getComputedStyle(document.getElementById('p')).font;
-    hFont[1] = getComputedStyle(document.getElementById('h1')).font;
-    hFont[2] = getComputedStyle(document.getElementById('h2')).font;
-    hFont[3] = getComputedStyle(document.getElementById('h3')).font;
-    hFont[4] = getComputedStyle(document.getElementById('h4')).font;
-    hFont[5] = getComputedStyle(document.getElementById('h5')).font;
-    hFont[6] = getComputedStyle(document.getElementById('h6')).font;
-
-    hFont['bold'] = getComputedStyle(document.getElementById('bold')).font;
-    hFont['italic'] = getComputedStyle(document.getElementById('italic')).font;
-
-
-    vscode.postMessage({
-      command: "requestLoad",
-      text: "",
-    });
 
   });
 
@@ -702,7 +702,7 @@ mdtextR
     console.log(cells);
 
     cellsStreamNext(cells);
- 
+
     const f = () => {
 
       sortableR.next(
