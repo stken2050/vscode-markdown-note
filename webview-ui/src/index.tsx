@@ -12,6 +12,9 @@ import './css/custom.scss';
 
 //https://github.com/prismjs/prism-themes#readme
 import './css/prism-themes/themes/prism-coldark-dark.css'
+
+import katex from 'katex';
+
 import App from './App';
 
 
