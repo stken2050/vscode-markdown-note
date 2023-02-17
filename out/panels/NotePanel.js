@@ -43,12 +43,6 @@ class NotePanel {
         this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
-        vscode_1.window.onDidChangeActiveTextEditor(() => {
-            console.log("onDidChangeActiveTextEditor!!!!!");
-            (getFileName() !== "")
-                ? reloadWebview()
-                : undefined;
-        });
     }
     /**
      * Renders the current webview panel if it exists otherwise a new webview panel
@@ -154,6 +148,13 @@ class NotePanel {
      * @param context A reference to the extension context
      */
     _setWebviewMessageListener(webview) {
+        vscode_1.window.onDidChangeActiveTextEditor(() => {
+            console.log("onDidChangeActiveTextEditor!!!!!");
+            const fileName = getFileName();
+            (fileName !== "") && (fileName !== filePathR.lastVal)
+                ? reloadWebview()
+                : undefined;
+        });
         keybindsR.map((keybinds) => webview.postMessage({
             cmd: 'keybinds',
             obj: keybinds

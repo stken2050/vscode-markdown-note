@@ -69,18 +69,6 @@ export class NotePanel {
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
 
-
-    window.onDidChangeActiveTextEditor(
-      () => {
-        console.log("onDidChangeActiveTextEditor!!!!!");
-
-        (getFileName() !== "")
-          ? reloadWebview()
-          : undefined;
-      }
-    );
-
-
   }
 
   /**
@@ -200,6 +188,20 @@ export class NotePanel {
    * @param context A reference to the extension context
    */
   private _setWebviewMessageListener(webview: Webview) {
+
+
+    window.onDidChangeActiveTextEditor(
+      () => {
+        console.log("onDidChangeActiveTextEditor!!!!!");
+
+        const fileName = getFileName();
+
+        (fileName !== "") && (fileName !== filePathR.lastVal)
+          ? reloadWebview()
+          : undefined;
+      }
+    );
+
 
     keybindsR.map((keybinds) =>
       webview.postMessage({
