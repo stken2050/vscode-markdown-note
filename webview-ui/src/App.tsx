@@ -82,8 +82,6 @@ const keyMatch = evt => cmd =>
 const sortableR = R(undefined);
 
 
-
-
 const markHtml =
   (id: string) => {
 
@@ -304,17 +302,9 @@ const inlinemath = ev => id => {
   replaceSelected('$')('$');
 };
 
-const shell = ev => id => {
+const code = ev => id => {
   ev.preventDefault();
-  newlinesSelected('```sh')('```');
-};
-const typescript = ev => id => {
-  ev.preventDefault();
-  newlinesSelected('```typescript')('```');
-};
-const fsharp = ev => id => {
-  ev.preventDefault();
-  newlinesSelected('```fsharp')('```');
+  newlinesSelected('```')('```');
 };
 
 const math = ev => id => {
@@ -470,23 +460,19 @@ const Cell: Component = (text: string) => {
                 ? italic(ev)
                 : keyMatch(ev)("inlinecode")
                   ? inlinecode(ev)(id)
-                  : keyMatch(ev)("shell")
-                    ? shell(ev)(id)
-                    : keyMatch(ev)("typescript")
-                      ? typescript(ev)(id)
-                      : keyMatch(ev)("fsharp")
-                        ? fsharp(ev)(id)
-                        : keyMatch(ev)("inlinemath")
-                          ? inlinemath(ev)(id)
-                          : keyMatch(ev)("math")
-                            ? math(ev)(id)
-                            : keyMatch(ev)("url-paste")
-                              ? urlPaste(ev)(id)
-                              : keyMatch(ev)("img-paste")
-                                ? imgPaste(ev)(id)
-                                : keyMatch(ev)("adomonition")
-                                  ? adomonition(ev)(id)
-                                  : window.setTimeout(f0, 0);
+                  : keyMatch(ev)("code")
+                    ? code(ev)(id)
+                    : keyMatch(ev)("inlinemath")
+                      ? inlinemath(ev)(id)
+                      : keyMatch(ev)("math")
+                        ? math(ev)(id)
+                        : keyMatch(ev)("url-paste")
+                          ? urlPaste(ev)(id)
+                          : keyMatch(ev)("img-paste")
+                            ? imgPaste(ev)(id)
+                            : keyMatch(ev)("adomonition")
+                              ? adomonition(ev)(id)
+                              : window.setTimeout(f0, 0);
 
 
   };
@@ -662,7 +648,7 @@ const parseMd = (mdText: string) => {
 
   const cellTexts =
     mdText
-      .replace(/:{3}([\w]*)\n([\S\s]+?)\n:{3}/g,
+      .replace(/:{3}(.+)\n([\S\s]+?)\n:{3}/g,
         match => separator + match + separator)
 
       .split(separator)
@@ -679,7 +665,7 @@ const parseMd = (mdText: string) => {
               match => separator + match + separator)
             .split(separator)
 
-            .flatMap(mdtext2=> {
+            .flatMap(mdtext2 => {
 
               const first3 = mdtext2.slice(0, 3);
 

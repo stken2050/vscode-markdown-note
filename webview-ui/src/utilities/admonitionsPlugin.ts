@@ -8,12 +8,11 @@ const admonitionsPlugin = () =>
     (tree) =>
         visit(tree,
             (node) =>
-                (node.type === 'containerDirective') &&
-                    (['note', 'tip', 'info', 'caution', 'danger']
-                        .includes(node.name))
+                (node.type === 'containerDirective')
                     ? (() => {
                         const data = node.data || (node.data = {});
-                        const title = node.attributes.title || node.name.toUpperCase();
+                        const title =
+                            node.name.replace('sharp', '#').toUpperCase();
                         data.hName = 'div';
                         data.hProperties = {
                             className: `admonition admonition-${node.name}`,

@@ -17,6 +17,7 @@
     "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
+    "@microflash/remark-callout-directives": "^1.5.0",
     "@vscode/webview-ui-toolkit": "^1.2.1",
     "bootstrap": "^5.2.0",
     "github-markdown-css": "^5.1.0",

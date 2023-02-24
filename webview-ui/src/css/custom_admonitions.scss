@@ -5,44 +5,42 @@
     padding: 1rem 1rem 1px;
     width: 100%
 }
+
 .admonition .admonition-title {
     font-weight: 700;
     margin-bottom: 1rem
 }
 
-.admonition-note {
-    background-color: #F2F2F2
-}
-.admonition-note .admonition-title {
-    color: #474748
-}
 
-.admonition-tip {
+.admonition-note {
     background-color: #E6F6E6
 }
-.admonition-tip .admonition-title {
+
+.admonition-note .admonition-title {
     color: #003100
 }
 
-.admonition-info {
-    background-color: #EEF9FD
-}
-.admonition-info .admonition-title {
-    color: #193C47
-}
 
-.admonition-caution {
+.admonition-javascript {
     background-color: #FFF8E6
 }
-.admonition-caution .admonition-title {
+
+.admonition-javascript .admonition-title {
     color: #8C4400
 }
 
-.admonition-danger {
-    background-color: #FFEBEC
-}
-.admonition-danger .admonition-title {
-    color: #57303D
+.admonition-typescript {
+    background-color: #d7f4ff
 }
 
+.admonition-typescript .admonition-title {
+    color: #36768a
+}
 
+.admonition-fsharp {
+    background-color: hsl(209, 93%, 73%)
+}
+
+.admonition-fsharp .admonition-title {
+    color: #14332a
+}
