@@ -313,7 +313,7 @@ const math = ev => id => {
 };
 const adomonition = ev => id => {
   ev.preventDefault();
-  newlinesSelected(':::tip')(':::');
+  newlinesSelected(':::')(':::');
 };
 
 

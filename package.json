@@ -2,7 +2,13 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "Markdown Note(Editable Preview)",
-  "version": "1.0.0",
+  "version": "1.1.0",
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stken2050/vscode-markdown-note.git"
+  },
+
   "engines": {
     "vscode": "^1.71.0"
   },
