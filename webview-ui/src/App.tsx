@@ -660,31 +660,40 @@ const parseMd = (mdText: string) => {
 
   const separator = "@@!!################!!@@";
 
-  const preText =
-    mdText
-      .replace(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/g,
-        match => separator + match + separator)
-      .replace(/\${3}([\w]*)\n([\S\s]+?)\n\${3}/g,
-        match => separator + match + separator)
-      .replace(/:{3}([\w]*)\n([\S\s]+?)\n:{3}/g,
-        match => separator + match + separator);
-
   const cellTexts =
-    preText.split(separator)
+    mdText
+      .replace(/:{3}([\w]*)\n([\S\s]+?)\n:{3}/g,
+        match => separator + match + separator)
 
-      .flatMap(mdtext => {
-        const first3 = mdtext.slice(0, 3);
+      .split(separator)
 
-        return (first3 === '```'
-          || first3 === '$$$'
-          || first3 === ':::')
-          ? mdtext
-          : mdtext
-            .split(/\n{2,}/g)
-            .flatMap(mdtext =>
-              mdtext === ''
-                ? []
-                : [mdtext]);
+      .flatMap(mdtext1 => {
+        const first3 = mdtext1.slice(0, 3);
+
+        return (first3 === ':::')
+          ? [mdtext1]
+          : mdtext1
+            .replace(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/g,
+              match => separator + match + separator)
+            .replace(/\${3}([\w]*)\n([\S\s]+?)\n\${3}/g,
+              match => separator + match + separator)
+            .split(separator)
+
+            .flatMap(mdtext2=> {
+
+              const first3 = mdtext2.slice(0, 3);
+
+              return (first3 === '```'
+                || first3 === '$$$')
+                ? [mdtext2]
+                : mdtext2
+                  .split(/\n{2,}/g)
+                  .flatMap(mdtext3 =>
+                    mdtext3 === ''
+                      ? []
+                      : [mdtext3]);
+            })
+
       });
 
   console.log(cellTexts);
