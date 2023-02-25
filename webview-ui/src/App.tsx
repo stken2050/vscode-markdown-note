@@ -79,9 +79,6 @@ const keyMatch = evt => cmd =>
   (evt.code == keybinds[cmd].code);
 
 
-const sortableR = R(undefined);
-
-
 const markHtml =
   (id: string) => {
 
@@ -311,7 +308,7 @@ const math = ev => id => {
   ev.preventDefault();
   newlinesSelected('$$$')('$$$');
 };
-const adomonition = ev => id => {
+const admonition = ev => id => {
   ev.preventDefault();
   newlinesSelected(':::')(':::');
 };
@@ -446,33 +443,35 @@ const Cell: Component = (text: string) => {
 
     };
 
-    keyMatch(ev)("undo")
-      ? undo(ev)(id)
-      : keyMatch(ev)("redo")
-        ? redo(ev)(id)
-        : keyMatch(ev)("cell-add")
-          ? addCell(id)
-          : keyMatch(ev)("cell-delete")
-            ? deleteCell(id)
-            : keyMatch(ev)("bold")
-              ? bold(ev)
-              : keyMatch(ev)("italic")
-                ? italic(ev)
-                : keyMatch(ev)("inlinecode")
-                  ? inlinecode(ev)(id)
-                  : keyMatch(ev)("code")
-                    ? code(ev)(id)
-                    : keyMatch(ev)("inlinemath")
-                      ? inlinemath(ev)(id)
-                      : keyMatch(ev)("math")
-                        ? math(ev)(id)
-                        : keyMatch(ev)("url-paste")
-                          ? urlPaste(ev)(id)
-                          : keyMatch(ev)("img-paste")
-                            ? imgPaste(ev)(id)
-                            : keyMatch(ev)("adomonition")
-                              ? adomonition(ev)(id)
-                              : window.setTimeout(f0, 0);
+    keyMatch(ev)("blur")
+      ? onBlur(id)
+      : keyMatch(ev)("undo")
+        ? undo(ev)(id)
+        : keyMatch(ev)("redo")
+          ? redo(ev)(id)
+          : keyMatch(ev)("cell-add")
+            ? addCell(id)
+            : keyMatch(ev)("cell-delete")
+              ? deleteCell(id)
+              : keyMatch(ev)("bold")
+                ? bold(ev)
+                : keyMatch(ev)("italic")
+                  ? italic(ev)
+                  : keyMatch(ev)("inlinecode")
+                    ? inlinecode(ev)(id)
+                    : keyMatch(ev)("code")
+                      ? code(ev)(id)
+                      : keyMatch(ev)("inlinemath")
+                        ? inlinemath(ev)(id)
+                        : keyMatch(ev)("math")
+                          ? math(ev)(id)
+                          : keyMatch(ev)("url-paste")
+                            ? urlPaste(ev)(id)
+                            : keyMatch(ev)("img-paste")
+                              ? imgPaste(ev)(id)
+                              : keyMatch(ev)("admonition")
+                                ? admonition(ev)(id)
+                                : window.setTimeout(f0, 0);
 
 
   };
@@ -486,7 +485,6 @@ const Cell: Component = (text: string) => {
 
   const onBlur = id => {
     html(id);
-
     console.log('onBlur');
     cellToMarkSave();
   };
@@ -542,7 +540,6 @@ const Cell: Component = (text: string) => {
 
 
 const onSort = evt => {
-
   console.log('onSort');
   cellToMarkSave();
 }
@@ -580,11 +577,7 @@ const App: Component = () => {
       hFont['bold'] = getComputedStyle(document.getElementById('bold')).font;
       hFont['italic'] = getComputedStyle(document.getElementById('italic')).font;
 
-
-      vscode.postMessage({
-        command: "requestLoad",
-        text: "",
-      });
+      requestLoad();
     });
 
 
@@ -616,7 +609,7 @@ const App: Component = () => {
 };
 
 const cellToMarkSave = () =>
-  window.setTimeout(
+  setTimeout(
     () => save(cellToMark()),
     0);
 
@@ -630,61 +623,52 @@ const cellToMark = () => {
   return text;
 
 };
-const save = (text: string) => {
 
+const requestLoad = () =>
+  vscode.postMessage({
+    command: "requestLoad",
+    text: "",
+  });
+
+const save = (text: string) =>
   vscode.postMessage({
     command: "save",
     text: text,
   });
 
-};
 
-
+const separator = "@@!!################!!@@";
+const first3 = mdText => mdText.slice(0, 3);
 
 //=============================================================
-const parseMd = (mdText: string) => {
+const parseMd = (mdText: string) =>
+  mdText
+    .replace(/:{3}(.+)\n([\S\s]+?)\n:{3}/g,
+      match => separator + match + separator)
+    .split(separator)
+    .flatMap(mdtext1 =>
+      (first3(mdtext1) === ':::')
+        ? [mdtext1]
+        : mdtext1
+          .replace(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/g,
+            match => separator + match + separator)
+          .replace(/\${3}([\w]*)\n([\S\s]+?)\n\${3}/g,
+            match => separator + match + separator)
+          .split(separator)
+          .flatMap(mdtext2 =>
+            (first3(mdtext2) === '```'
+              || first3(mdtext2) === '$$$')
+              ? [mdtext2]
+              : mdtext2
+                .split(/\n{2,}/g)
+                .flatMap(mdtext3 =>
+                  mdtext3 === ''
+                    ? []
+                    : [mdtext3]))
 
-  const separator = "@@!!################!!@@";
+    );
 
-  const cellTexts =
-    mdText
-      .replace(/:{3}(.+)\n([\S\s]+?)\n:{3}/g,
-        match => separator + match + separator)
 
-      .split(separator)
-
-      .flatMap(mdtext1 => {
-        const first3 = mdtext1.slice(0, 3);
-
-        return (first3 === ':::')
-          ? [mdtext1]
-          : mdtext1
-            .replace(/`{3}([\w]*)\n([\S\s]+?)\n`{3}/g,
-              match => separator + match + separator)
-            .replace(/\${3}([\w]*)\n([\S\s]+?)\n\${3}/g,
-              match => separator + match + separator)
-            .split(separator)
-
-            .flatMap(mdtext2 => {
-
-              const first3 = mdtext2.slice(0, 3);
-
-              return (first3 === '```'
-                || first3 === '$$$')
-                ? [mdtext2]
-                : mdtext2
-                  .split(/\n{2,}/g)
-                  .flatMap(mdtext3 =>
-                    mdtext3 === ''
-                      ? []
-                      : [mdtext3]);
-            })
-
-      });
-
-  console.log(cellTexts);
-  return cellTexts;
-};
 
 const mdtextR = R('');
 //==========================================
@@ -696,20 +680,16 @@ mdtextR
 
     console.log(cells);
 
-    cellsStreamNext(cells);
+    cellsStreamNext(cells); //update cells
 
-    const f = () => {
-
-      sortableR.next(
-        Sortable.create(
-          document.getElementById('items'),
-          {
-            animation: 150,
-            ghostClass: "ghost",
-            onEnd: onSort
-          })
-      );
-    };
+    const f = () =>
+      Sortable.create(
+        document.getElementById('items'),
+        {
+          animation: 150,
+          ghostClass: "ghost",
+          onEnd: onSort
+        });
 
     setTimeout(f, 0);
   });

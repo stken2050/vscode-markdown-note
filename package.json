@@ -2,13 +2,11 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "Markdown Note(Editable Preview)",
-  "version": "1.1.0",
-
+  "version": "0.9.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
   },
-
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -28,8 +26,14 @@
         },
         "markdownnote.webkeybindings": {
           "type": "object",
-          "description": "MarkdownNote web keybindings",
+          "description": "MarkdownNote web keybindings: get keycode via https://js-1nlwk2.stackblitz.io",
           "default": {
+            "blur": {
+              "shiftKey": false,
+              "ctrlKey": false,
+              "altKey": false,
+              "code": "Escape"
+            },
             "undo": {
               "shiftKey": false,
               "ctrlKey": true,
@@ -102,7 +106,7 @@
               "altKey": false,
               "code": "KeyP"
             },
-            "adomonition": {
+            "admonition": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
