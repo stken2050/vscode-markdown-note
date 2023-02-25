@@ -15,7 +15,11 @@ const getExsitingFileName = (fileName) => (fileName !== "")
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
 const keybindsR = (0, reactive_monad_1.R)(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
-const getConfig = () => keybindsR.next(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
+const imageRepositoryR = (0, reactive_monad_1.R)(vscode.workspace.getConfiguration('markdownnote.image_repository'));
+const getConfig = () => {
+    keybindsR.next(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
+    imageRepositoryR.next(vscode.workspace.getConfiguration('markdownnote.image_repository'));
+};
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -155,6 +159,10 @@ class NotePanel {
         keybindsR.map((keybinds) => webview.postMessage({
             cmd: 'keybinds',
             obj: keybinds
+        }));
+        imageRepositoryR.map((imageRepository) => webview.postMessage({
+            cmd: 'imageRepository',
+            obj: imageRepository
         }));
         vscode.workspace.onDidChangeConfiguration(getConfig);
         filePathR.map((filePath) => {

@@ -29,6 +29,7 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import rehypeFormat from 'rehype-format'
 import rehypeStringify from 'rehype-stringify'
+import { resolve } from "path";
 
 
 
@@ -62,14 +63,16 @@ const hFont = {};
 const [cellsStream, cellsStreamNext] = createSignal([]);
 
 const contentStreams = {};
-const testList = {};
+const textList = {};
 const ID = new Map(); //ID.get(cell)
 
 const historyEdit = [];
 const undoHistoryEdit = [];
 
+let imageRepository;
 
 let keybinds;
+
 //==========================================
 
 const keyMatch = evt => cmd =>
@@ -96,7 +99,7 @@ const markHtml =
       .use(rehypeFormat)
       .use(rehypeStringify)
 
-      .process(testList[id]);
+      .process(textList[id]);
 
     rmPromise.then((html) => checkHtml(id)(html));
   };
@@ -154,7 +157,8 @@ const showEditFocus =
 
 const newCellID = R('');
 
-const addCell = id => {
+const addCell = ev => id => {
+  console.log('on addCell');
 
   const newCells = cells =>
     cells.flatMap(
@@ -174,9 +178,8 @@ const addCell = id => {
 
 };
 
-const deleteCell = id => {
-
-  deletingID.next(id);
+const deleteCell = (ev) => id => {
+  console.log('on deleteCell');
 
   const newCells = cells =>
     cells.flatMap(
@@ -186,9 +189,16 @@ const deleteCell = id => {
           : [el]
     );
 
-  cellsStreamNext(cells => newCells(cells));
+  cellsStream().length === 1
+    ? undefined
+    : cellsStreamNext(
+      cells => {
 
-  console.log('onDelete');
+        deletingID.next(id);
+        return newCells(cells);
+
+      });
+
   cellToMarkSave();
 
 };
@@ -223,13 +233,26 @@ const hStyle = idEdit => {
 
 const html = id => {
 
-  testList[id] = document.getElementById("edit" + id).innerText;
+  textList[id] = document.getElementById("edit" + id).innerText;
 
   id === deletingID.lastVal
     ? undefined
     : markHtml(id);
 
 };
+
+const onInput = idEdit => {
+  console.log("onInput");
+  console.log(idEdit);
+  hStyle(idEdit);
+};
+
+const onBlur = (ev) => id => {
+  html(id);
+  console.log('onBlur');
+  cellToMarkSave();
+};
+
 
 const replaceSelected =
   before => after => {
@@ -279,11 +302,11 @@ const replaceURLpaste =
       );
   };
 
-const bold = (ev) => {
+const bold = (ev) => (id) => {
   ev.preventDefault();
   replaceSelected(' **')('** ');
 };
-const italic = (ev) => {
+const italic = (ev) => (id) => {
   ev.preventDefault();
   replaceSelected(' *')('* ');
 };
@@ -324,7 +347,89 @@ const imgPaste = ev => id => {
 };
 
 
+//===========================================
 
+const blobToBase64 = (blob) =>
+  new Promise((resolve) => {
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      const srcData = fileReader.result;
+      resolve(srcData);
+    };
+    fileReader.readAsDataURL(blob);
+  });
+
+const paste = ev => id => {
+  console.log('on paste');
+
+  const f = text => {
+    ev.preventDefault();
+    const sel = window.getSelection();
+    // const selStr = sel.toString();
+    const range = sel.getRangeAt(0);
+
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+
+    return true;
+  };
+
+  navigator.clipboard
+    .read()
+    .then(
+      (clipboardItems) => {
+        console.log("cliboard read done");
+        const item = clipboardItems[0];
+        // single copied item anyway
+        // https://github.com/w3c/clipboard-apis/issues/93
+        console.log(item);
+        !item.types[0].startsWith("image/")
+          ? undefined
+          : imageRepository.repository === "username/webimages_repo" // left as default, no user config
+            ? undefined
+            : item
+              .getType(item.types[0])
+              .then(blobToBase64)
+              .then((srcData: string) => {
+
+                const content = srcData.split('base64,')[1];
+
+                //console.log(content);
+                const ext = item.types[0].split("/")[1];
+                const filename = "img_" + Date.now() + "." + ext;
+                const data = {
+                  name: filename,
+                  content: content
+                };
+                return fetch(
+                  `https://api.github.com/repos/${imageRepository.repository}/contents/${data.name}`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      Accept: "application/vnd.github+json",
+                      Authorization: `Bearer ${imageRepository.token}`
+                    },
+                    body: JSON.stringify({
+                      message: "upload image from api",
+                      content: data.content
+                    })
+                  }
+                )
+                  .then((res) => res.json())
+                  .then(
+                    (json) => json.content.download_url
+                  )
+                  .then((text: string) => "![image](" + text + ")")
+                  .then(f)
+                  .then(() => onBlur(ev)(id));
+
+              });
+
+
+      });
+
+
+};
 //=======================================================
 
 const undo = ev => id => {
@@ -443,51 +548,42 @@ const Cell: Component = (text: string) => {
 
     };
 
-    keyMatch(ev)("blur")
-      ? onBlur(id)
-      : keyMatch(ev)("undo")
-        ? undo(ev)(id)
-        : keyMatch(ev)("redo")
-          ? redo(ev)(id)
-          : keyMatch(ev)("cell-add")
-            ? addCell(id)
-            : keyMatch(ev)("cell-delete")
-              ? deleteCell(id)
-              : keyMatch(ev)("bold")
-                ? bold(ev)
-                : keyMatch(ev)("italic")
-                  ? italic(ev)
-                  : keyMatch(ev)("inlinecode")
-                    ? inlinecode(ev)(id)
-                    : keyMatch(ev)("code")
-                      ? code(ev)(id)
-                      : keyMatch(ev)("inlinemath")
-                        ? inlinemath(ev)(id)
-                        : keyMatch(ev)("math")
-                          ? math(ev)(id)
-                          : keyMatch(ev)("url-paste")
-                            ? urlPaste(ev)(id)
-                            : keyMatch(ev)("img-paste")
-                              ? imgPaste(ev)(id)
-                              : keyMatch(ev)("admonition")
-                                ? admonition(ev)(id)
-                                : window.setTimeout(f0, 0);
+    keyMatch(ev)("paste")
+      ? paste(ev)(id)
+      : keyMatch(ev)("blur")
+        ? onBlur(ev)(id)
+        : keyMatch(ev)("undo")
+          ? undo(ev)(id)
+          : keyMatch(ev)("redo")
+            ? redo(ev)(id)
+            : keyMatch(ev)("cell-add")
+              ? addCell(ev)(id)
+              : keyMatch(ev)("cell-delete")
+                ? deleteCell(ev)(id)
+                : keyMatch(ev)("bold")
+                  ? bold(ev)(id)
+                  : keyMatch(ev)("italic")
+                    ? italic(ev)(id)
+                    : keyMatch(ev)("inlinecode")
+                      ? inlinecode(ev)(id)
+                      : keyMatch(ev)("code")
+                        ? code(ev)(id)
+                        : keyMatch(ev)("inlinemath")
+                          ? inlinemath(ev)(id)
+                          : keyMatch(ev)("math")
+                            ? math(ev)(id)
+                            : keyMatch(ev)("url-paste")
+                              ? urlPaste(ev)(id)
+                              : keyMatch(ev)("img-paste")
+                                ? imgPaste(ev)(id)
+                                : keyMatch(ev)("admonition")
+                                  ? admonition(ev)(id)
+                                  : window.setTimeout(f0, 0);
 
 
   };
 
 
-  const onInput = idEdit => {
-    console.log("onInput");
-    console.log(idEdit);
-    hStyle(idEdit);
-  };
-
-  const onBlur = id => {
-    html(id);
-    console.log('onBlur');
-    cellToMarkSave();
-  };
 
 
   //---event----------------------------------------------
@@ -503,7 +599,7 @@ const Cell: Component = (text: string) => {
         contenteditable={"plaintext-only" as any}
         onKeyDown={ev => onKeyDown(ev)(id)}
         onInput={ev => onInput(idEdit)}
-        onBlur={ev => onBlur(id)}
+        onBlur={ev => onBlur(ev)(id)}
         style={{ display: 'none' }}
       >
         {text}
@@ -616,7 +712,7 @@ const cellToMarkSave = () =>
 const cellToMark = () => {
 
   const els = Array.from(document.getElementsByClassName('cell'));
-  const texts = els.map((el: HTMLElement) => testList[el.id]);
+  const texts = els.map((el: HTMLElement) => textList[el.id]);
 
   const text = texts.reduce((sum, a) => sum + '\n\n' + a);
 
@@ -670,13 +766,16 @@ const parseMd = (mdText: string) =>
 
 
 
-const mdtextR = R('');
+const mdtextR = R('Loading...');
 //==========================================
 mdtextR
   .map(mdText => parseMd(mdText))
   .map(mds => {
 
-    const cells = mds.map(md => Cell(md));
+    const cells =
+      mds.length === 0 // if markdown text is empty
+        ? [Cell("# Title")]
+        : mds.map(md => Cell(md));
 
     console.log(cells);
 
@@ -700,20 +799,24 @@ window.addEventListener('message', event => {
 
   const message = event.data;
 
-  message.cmd === 'keybinds'
+  message.cmd === 'imageRepository'
     ? (() => {
-      console.log("keybinds!!!!!!!!!!!!!");
-      keybinds = message.obj;
-      console.log(keybinds);
+      console.log("imageRepository!!!!!!!!!!!!!");
+      imageRepository = message.obj;
+      console.log(imageRepository);
     })()
-    : message.cmd === 'load'
-      ? mdtextR.next(message.obj)
-      : undefined;
+    : message.cmd === 'keybinds'
+      ? (() => {
+        console.log("keybinds!!!!!!!!!!!!!");
+        keybinds = message.obj;
+        console.log(keybinds);
+      })()
+      : message.cmd === 'load'
+        ? mdtextR.next(message.obj)
+        : undefined;
 
 });
 //==========================================
-
-
 
 
 export default App;

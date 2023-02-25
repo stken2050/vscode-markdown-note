@@ -24,15 +24,29 @@
         "workbench.editor.autoLockGroups": {
           "mainThreadWebview-showNote": true
         },
+        "markdownnote.image_repository": {
+          "type": "object",
+          "description": "identifier and token for github image repositoy",
+          "default": {
+            "repository": "username/webimages_repo",
+            "token": "ghp_xxxxxxxxxxxxxxxxxxxx"
+          }
+        },
         "markdownnote.webkeybindings": {
           "type": "object",
-          "description": "MarkdownNote web keybindings: get keycode via https://js-1nlwk2.stackblitz.io",
+          "description": "get keycode via https://js-1nlwk2.stackblitz.io",
           "default": {
             "blur": {
               "shiftKey": false,
               "ctrlKey": false,
               "altKey": false,
               "code": "Escape"
+            },
+            "paste": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "KeyV"
             },
             "undo": {
               "shiftKey": false,

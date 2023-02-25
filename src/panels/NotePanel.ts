@@ -28,10 +28,20 @@ const reloadWebview = () =>
 const keybindsR =
   R(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
 
-const getConfig: any = () =>
+const imageRepositoryR =
+  R(vscode.workspace.getConfiguration('markdownnote.image_repository'));
+
+
+const getConfig: any = () => {
   keybindsR.next(
     vscode.workspace.getConfiguration('markdownnote.webkeybindings')
   );
+
+  imageRepositoryR.next(
+    vscode.workspace.getConfiguration('markdownnote.image_repository')
+  );
+
+};
 
 
 /**
@@ -204,6 +214,13 @@ export class NotePanel {
       webview.postMessage({
         cmd: 'keybinds',
         obj: keybinds
+      })
+    );
+
+    imageRepositoryR.map((imageRepository) =>
+      webview.postMessage({
+        cmd: 'imageRepository',
+        obj: imageRepository
       })
     );
 
