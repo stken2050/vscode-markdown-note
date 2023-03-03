@@ -24,7 +24,6 @@ const fileNameR = R('');
 let _extensionUri: Uri;
 
 
-
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -70,45 +69,54 @@ export class NotePanel {
    */
 
   public static render(
-    extensionUri: Uri, fileName: string, mode: number) {
-
+    extensionUri: Uri, mode: number) {
     _extensionUri = extensionUri;
 
-    console.log("!!!!!render");
-    console.log(fileName);
-    fileNameR.next(fileName);
+    console.log("filename before webView revealing");
 
-    console.log("REVEALING======================");
-    isRevealing = true;
+    const fileName =
+      window.activeTextEditor?.document.uri
+        .toString()
+        .split("file://")[1];
 
-    console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
-
-    (NotePanel.currentPanel)
-      // If the webview panel already exists reveal it
+    !!fileName
       ? (() => {
-        reloadWebview(); //clean up the exitisting webview
-        NotePanel.currentPanel?._panel.reveal(mode);
-      })()
-      : (() => {
-        // If a webview panel does not already exist create and show a new one
-        const panel = window.createWebviewPanel(
-          // Panel view type
-          "MarkdownNote",
-          // Panel title
-          "MarkdownNote",
-          // The editor column the panel should be displayed in
-          mode,
-          // Extra panel configurations
-          {
-            // Enable JavaScript in the webview
-            enableScripts: true,
-            // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-            localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "webview-ui/build")],
-          }
-        );
+        fileNameR.next(fileName);
+        console.log(fileNameR.lastVal);
+        //can read fileName before onDidChangeActiveText event
 
-        NotePanel.currentPanel = new NotePanel(panel, extensionUri);
-      })();
+        console.log("REVEALING======================");
+        isRevealing = true;
+        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
+
+        (NotePanel.currentPanel)
+          // If the webview panel already exists reveal it
+          ? (() => {
+            reloadWebview(); //clean up the exitisting webview
+            NotePanel.currentPanel?._panel.reveal(mode);
+          })()
+          : (() => {
+            // If a webview panel does not already exist create and show a new one
+            const panel = window.createWebviewPanel(
+              // Panel view type
+              "MarkdownNote",
+              // Panel title
+              "MarkdownNote",
+              // The editor column the panel should be displayed in
+              mode,
+              // Extra panel configurations
+              {
+                // Enable JavaScript in the webview
+                enableScripts: true,
+                // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
+                localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "webview-ui/build")],
+              }
+            );
+
+            NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+          })();
+      })()
+      : undefined;
 
   };
 
@@ -183,23 +191,10 @@ export class NotePanel {
    */
   private _setWebviewMessageListener(webview: Webview) {
 
-    const f = (mode: number) =>
-      () => {
-        const fileName =
-          window.activeTextEditor?.document.uri
-            .toString()
-            .split("file://")[1];
-
-        !!fileName
-          ? NotePanel.render(_extensionUri, fileName, mode)
-          : undefined;
-      };
-
-
     window.onDidChangeActiveTextEditor(
       () => {
         console.log("onDidChangeActiveTextEditor!!!!!");
-
+        console.log("Revealing is----");
         console.log(isRevealing);
 
         isRevealing
@@ -207,26 +202,50 @@ export class NotePanel {
           : isDuplicateEventClean
             ? (() => {
 
-              console.log(
-                "not revealing, so sending openNote command");
 
-              const singleMode =
-                vscode.workspace
-                  .getConfiguration("markdownnote.single_mode");
+              const fileName =
+                window.activeTextEditor?.document.uri
+                  .toString()
+                  .split("file://")[1];
 
-              console.log("====singleMode ?");
-              console.log(singleMode["true/false"]);
-              console.log("---------------");
+              console.log("!!!!!render");
+              console.log(fileName);
 
-              singleMode["true/false"]
-                ? f(1)()
-                : f(2)();
+              fileName === fileNameR.lastVal
+                ? undefined
+                : (() => {
 
-              isDuplicateEventClean = false;
-              setTimeout(
-                () => isDuplicateEventClean = true,
-                500
-              );
+                  !!fileName
+                    ? fileNameR.next(fileName)
+                    : undefined;
+
+
+
+                  console.log(
+                    "not revealing, so sending openNote command");
+                  const singleMode =
+                    vscode.workspace
+                      .getConfiguration("markdownnote.single_mode");
+
+                  console.log("====singleMode ?");
+                  console.log(singleMode["true/false"]);
+                  console.log("---------------");
+
+                  singleMode["true/false"]
+                    ? NotePanel.render(_extensionUri, 1)
+                    : NotePanel.render(_extensionUri, 2);
+
+                  isDuplicateEventClean = false;
+                  setTimeout(
+                    () => isDuplicateEventClean = true,
+                    500
+                  );
+
+
+
+                })();
+
+
             })()
             : console.log("======duplicated Event!!");
 

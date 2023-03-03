@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, Uri, window, workspace }
+import { commands, ExtensionContext, window, workspace }
   from "vscode";
 import { NotePanel } from "./panels/NotePanel";
 
@@ -6,22 +6,13 @@ export function activate(context: ExtensionContext) {
 
   console.log("!!!!!markdownnote Activated!!!!!");
 
-  const f = (mode: number) =>
-    () => {
-      const fileName =
-        window.activeTextEditor?.document.uri
-          .toString()
-          .split("file://")[1];
-
-      !!fileName
-        ? NotePanel.render(context.extensionUri, fileName, mode)
-        : undefined;
-    };
+  const f1 = () => NotePanel.render(context.extensionUri, 1);
+  const f2 = () => NotePanel.render(context.extensionUri, 2);
 
   const openNoteCommand =
-    commands.registerCommand("markdownnote.openNote", f(1));
+    commands.registerCommand("markdownnote.openNote", f1);
   const sideNoteCommand =
-    commands.registerCommand("markdownnote.sideNote", f(2));
+    commands.registerCommand("markdownnote.sideNote", f2);
 
   // Add command to the extension context
   context.subscriptions.push(openNoteCommand);
@@ -35,8 +26,8 @@ export function activate(context: ExtensionContext) {
   console.log("---------------");
 
   singleMode["true/false"]
-    ? f(1)()  // single mode
-    : f(2)(); // open to the side
+    ? f1()  // single mode
+    : f2(); // open to the side
 
 
 }
