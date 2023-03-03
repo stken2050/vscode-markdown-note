@@ -21,7 +21,9 @@ let isDuplicateEventClean = true;
 
 const fileNameR = R('');
 
-const modeR = R(2);
+let _extensionUri: Uri;
+
+
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -69,6 +71,8 @@ export class NotePanel {
 
   public static render(
     extensionUri: Uri, fileName: string, mode: number) {
+
+    _extensionUri = extensionUri;
 
     console.log("!!!!!render");
     console.log(fileName);
@@ -179,6 +183,18 @@ export class NotePanel {
    */
   private _setWebviewMessageListener(webview: Webview) {
 
+    const f = (mode: number) =>
+      () => {
+        const fileName =
+          window.activeTextEditor?.document.uri
+            .toString()
+            .split("file://")[1];
+
+        !!fileName
+          ? NotePanel.render(_extensionUri, fileName, mode)
+          : undefined;
+      };
+
 
     window.onDidChangeActiveTextEditor(
       () => {
@@ -203,10 +219,8 @@ export class NotePanel {
               console.log("---------------");
 
               singleMode["true/false"]
-                ? vscode.commands
-                  .executeCommand("markdownnote.openNote")
-                : vscode.commands
-                  .executeCommand("markdownnote.sideNote");
+                ? f(1)()
+                : f(2)();
 
               isDuplicateEventClean = false;
               setTimeout(

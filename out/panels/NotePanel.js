@@ -13,7 +13,7 @@ let isRevealing = false;
 //issue: https://github.com/microsoft/vscode/issues/108868
 let isDuplicateEventClean = true;
 const fileNameR = (0, reactive_monad_1.R)('');
-const modeR = (0, reactive_monad_1.R)(2);
+let _extensionUri;
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -49,6 +49,7 @@ class NotePanel {
      * @param extensionUri The URI of the directory containing the extension.
      */
     static render(extensionUri, fileName, mode) {
+        _extensionUri = extensionUri;
         console.log("!!!!!render");
         console.log(fileName);
         fileNameR.next(fileName);
@@ -146,6 +147,13 @@ class NotePanel {
      * @param context A reference to the extension context
      */
     _setWebviewMessageListener(webview) {
+        const f = (mode) => () => {
+            var _a;
+            const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
+            !!fileName
+                ? NotePanel.render(_extensionUri, fileName, mode)
+                : undefined;
+        };
         vscode_1.window.onDidChangeActiveTextEditor(() => {
             console.log("onDidChangeActiveTextEditor!!!!!");
             console.log(isRevealing);
@@ -160,10 +168,8 @@ class NotePanel {
                         console.log(singleMode["true/false"]);
                         console.log("---------------");
                         singleMode["true/false"]
-                            ? vscode.commands
-                                .executeCommand("markdownnote.openNote")
-                            : vscode.commands
-                                .executeCommand("markdownnote.sideNote");
+                            ? f(1)()
+                            : f(2)();
                         isDuplicateEventClean = false;
                         setTimeout(() => isDuplicateEventClean = true, 500);
                     })()
