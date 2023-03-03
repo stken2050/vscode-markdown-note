@@ -9,11 +9,9 @@ const vscode = require("vscode");
 const fs = require("node:fs/promises");
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
-let isRevealing = false;
 //issue: https://github.com/microsoft/vscode/issues/108868
 let isDuplicateEventClean = true;
 const fileNameR = (0, reactive_monad_1.R)('');
-let _extensionUri;
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -42,52 +40,45 @@ class NotePanel {
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
     }
+    static r() {
+        return fileNameR;
+    }
     /**
      * Renders the current webview panel if it exists otherwise a new webview panel
      * will be created and displayed.
      *
      * @param extensionUri The URI of the directory containing the extension.
      */
-    static render(extensionUri, mode) {
-        var _a;
-        _extensionUri = extensionUri;
-        console.log("filename before webView revealing");
-        const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
-        !!fileName
+    static render(extensionUri, fileName, mode) {
+        // the fileName that worked with webView becomes next fileNameR
+        fileNameR.next(fileName);
+        //can read fileName before onDidChangeActiveText event
+        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
+        (NotePanel.currentPanel)
+            // If the webview panel already exists reveal it
             ? (() => {
-                fileNameR.next(fileName);
-                console.log(fileNameR.lastVal);
-                //can read fileName before onDidChangeActiveText event
-                console.log("REVEALING======================");
-                isRevealing = true;
-                console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
-                (NotePanel.currentPanel)
-                    // If the webview panel already exists reveal it
-                    ? (() => {
-                        var _a;
-                        reloadWebview(); //clean up the exitisting webview
-                        (_a = NotePanel.currentPanel) === null || _a === void 0 ? void 0 : _a._panel.reveal(mode);
-                    })()
-                    : (() => {
-                        // If a webview panel does not already exist create and show a new one
-                        const panel = vscode_1.window.createWebviewPanel(
-                        // Panel view type
-                        "MarkdownNote", 
-                        // Panel title
-                        "MarkdownNote", 
-                        // The editor column the panel should be displayed in
-                        mode, 
-                        // Extra panel configurations
-                        {
-                            // Enable JavaScript in the webview
-                            enableScripts: true,
-                            // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-                            localResourceRoots: [vscode_1.Uri.joinPath(extensionUri, "out"), vscode_1.Uri.joinPath(extensionUri, "webview-ui/build")],
-                        });
-                        NotePanel.currentPanel = new NotePanel(panel, extensionUri);
-                    })();
+                var _a;
+                reloadWebview(); //clean up the exitisting webview
+                (_a = NotePanel.currentPanel) === null || _a === void 0 ? void 0 : _a._panel.reveal(mode);
             })()
-            : undefined;
+            : (() => {
+                // If a webview panel does not already exist create and show a new one
+                const panel = vscode_1.window.createWebviewPanel(
+                // Panel view type
+                "MarkdownNote", 
+                // Panel title
+                "MarkdownNote", 
+                // The editor column the panel should be displayed in
+                mode, 
+                // Extra panel configurations
+                {
+                    // Enable JavaScript in the webview
+                    enableScripts: true,
+                    // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
+                    localResourceRoots: [vscode_1.Uri.joinPath(extensionUri, "out"), vscode_1.Uri.joinPath(extensionUri, "webview-ui/build")],
+                });
+                NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+            })();
     }
     ;
     /**
@@ -154,38 +145,45 @@ class NotePanel {
      * @param context A reference to the extension context
      */
     _setWebviewMessageListener(webview) {
+        fileNameR.map(fileName => {
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            console.log(fileName);
+        });
         vscode_1.window.onDidChangeActiveTextEditor(() => {
-            console.log("onDidChangeActiveTextEditor!!!!!");
+            var _a;
+            console.log("%%%%%onDidChangeActiveTextEditor%%%%%%%%%%%%");
             console.log("Revealing is----");
-            console.log(isRevealing);
-            isRevealing
-                ? isRevealing = false
-                : isDuplicateEventClean
+            const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            console.log(fileName);
+            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+            !!fileName
+                ? fileName !== fileNameR.lastVal
                     ? (() => {
-                        var _a;
-                        const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
-                        console.log("!!!!!render");
+                        console.log("000000000000000");
+                        console.log("to load !!");
                         console.log(fileName);
-                        fileName === fileNameR.lastVal
-                            ? undefined
-                            : (() => {
-                                !!fileName
-                                    ? fileNameR.next(fileName)
-                                    : undefined;
-                                console.log("not revealing, so sending openNote command");
+                        console.log("000000000000000");
+                        isDuplicateEventClean
+                            ? (() => {
+                                //set timer----------------
+                                isDuplicateEventClean = false;
+                                setTimeout(() => isDuplicateEventClean = true, 500); //--------------------------
                                 const singleMode = vscode.workspace
                                     .getConfiguration("markdownnote.single_mode");
                                 console.log("====singleMode ?");
                                 console.log(singleMode["true/false"]);
                                 console.log("---------------");
                                 singleMode["true/false"]
-                                    ? NotePanel.render(_extensionUri, 1)
-                                    : NotePanel.render(_extensionUri, 2);
-                                isDuplicateEventClean = false;
-                                setTimeout(() => isDuplicateEventClean = true, 500);
-                            })();
+                                    ? vscode.commands
+                                        .executeCommand("markdownnote.openNote")
+                                    : vscode.commands
+                                        .executeCommand("markdownnote.sideNote");
+                            })()
+                            : console.log("======duplicated Event!!");
                     })()
-                    : console.log("======duplicated Event!!");
+                    : undefined
+                : undefined;
         });
         webview.onDidReceiveMessage((message) => {
             const command = message.command;

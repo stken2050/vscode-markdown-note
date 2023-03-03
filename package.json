@@ -28,7 +28,7 @@
           "type": "object",
           "description": "Single Mode, not Side by Side. The Single Mode feature involves the automatic execution of the 'markdownnote.openNote' command each time a markdown file is opened.",
           "default": {
-            "true/false": false
+            "true/false": true
           }
         },
         "markdownnote.image_repository": {

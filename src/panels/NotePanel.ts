@@ -14,14 +14,10 @@ const reloadWebview = () =>
   vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
 
-let isRevealing = false;
-
 //issue: https://github.com/microsoft/vscode/issues/108868
 let isDuplicateEventClean = true;
 
 const fileNameR = R('');
-
-let _extensionUri: Uri;
 
 
 /**
@@ -61,6 +57,10 @@ export class NotePanel {
 
   }
 
+  public static r()
+  {
+    return fileNameR;
+  }
   /**
    * Renders the current webview panel if it exists otherwise a new webview panel
    * will be created and displayed.
@@ -69,54 +69,41 @@ export class NotePanel {
    */
 
   public static render(
-    extensionUri: Uri, mode: number) {
-    _extensionUri = extensionUri;
+    extensionUri: Uri, fileName: string, mode: number) {
 
-    console.log("filename before webView revealing");
+    // the fileName that worked with webView becomes next fileNameR
+    fileNameR.next(fileName);
 
-    const fileName =
-      window.activeTextEditor?.document.uri
-        .toString()
-        .split("file://")[1];
+    //can read fileName before onDidChangeActiveText event
 
-    !!fileName
+    console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
+
+    (NotePanel.currentPanel)
+      // If the webview panel already exists reveal it
       ? (() => {
-        fileNameR.next(fileName);
-        console.log(fileNameR.lastVal);
-        //can read fileName before onDidChangeActiveText event
-
-        console.log("REVEALING======================");
-        isRevealing = true;
-        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
-
-        (NotePanel.currentPanel)
-          // If the webview panel already exists reveal it
-          ? (() => {
-            reloadWebview(); //clean up the exitisting webview
-            NotePanel.currentPanel?._panel.reveal(mode);
-          })()
-          : (() => {
-            // If a webview panel does not already exist create and show a new one
-            const panel = window.createWebviewPanel(
-              // Panel view type
-              "MarkdownNote",
-              // Panel title
-              "MarkdownNote",
-              // The editor column the panel should be displayed in
-              mode,
-              // Extra panel configurations
-              {
-                // Enable JavaScript in the webview
-                enableScripts: true,
-                // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-                localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "webview-ui/build")],
-              }
-            );
-
-            NotePanel.currentPanel = new NotePanel(panel, extensionUri);
-          })();
+        reloadWebview(); //clean up the exitisting webview
+        NotePanel.currentPanel?._panel.reveal(mode);
       })()
-      : undefined;
+      : (() => {
+        // If a webview panel does not already exist create and show a new one
+        const panel = window.createWebviewPanel(
+          // Panel view type
+          "MarkdownNote",
+          // Panel title
+          "MarkdownNote",
+          // The editor column the panel should be displayed in
+          mode,
+          // Extra panel configurations
+          {
+            // Enable JavaScript in the webview
+            enableScripts: true,
+            // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
+            localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "webview-ui/build")],
+          }
+        );
+
+        NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+      })();
 
   };
 
@@ -191,38 +178,45 @@ export class NotePanel {
    */
   private _setWebviewMessageListener(webview: Webview) {
 
+    fileNameR.map(fileName => {
+
+      console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+      console.log(fileName);
+    });
+
     window.onDidChangeActiveTextEditor(
       () => {
-        console.log("onDidChangeActiveTextEditor!!!!!");
+        console.log("%%%%%onDidChangeActiveTextEditor%%%%%%%%%%%%");
         console.log("Revealing is----");
-        console.log(isRevealing);
 
-        isRevealing
-          ? isRevealing = false
-          : isDuplicateEventClean
+        const fileName =
+          window.activeTextEditor?.document.uri
+            .toString()
+            .split("file://")[1];
+
+        console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        console.log(fileName);
+        console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
+
+        !!fileName
+          ? fileName !== fileNameR.lastVal
             ? (() => {
 
-
-              const fileName =
-                window.activeTextEditor?.document.uri
-                  .toString()
-                  .split("file://")[1];
-
-              console.log("!!!!!render");
+              console.log("000000000000000");
+              console.log("to load !!");
               console.log(fileName);
+              console.log("000000000000000");
 
-              fileName === fileNameR.lastVal
-                ? undefined
-                : (() => {
+              isDuplicateEventClean
+                ? (() => {
+                  //set timer----------------
+                  isDuplicateEventClean = false;
+                  setTimeout(
+                    () => isDuplicateEventClean = true,
+                    500
+                  ); //--------------------------
 
-                  !!fileName
-                    ? fileNameR.next(fileName)
-                    : undefined;
-
-
-
-                  console.log(
-                    "not revealing, so sending openNote command");
                   const singleMode =
                     vscode.workspace
                       .getConfiguration("markdownnote.single_mode");
@@ -232,22 +226,18 @@ export class NotePanel {
                   console.log("---------------");
 
                   singleMode["true/false"]
-                    ? NotePanel.render(_extensionUri, 1)
-                    : NotePanel.render(_extensionUri, 2);
+                    ? vscode.commands
+                      .executeCommand("markdownnote.openNote")
+                    : vscode.commands
+                      .executeCommand("markdownnote.sideNote");
 
-                  isDuplicateEventClean = false;
-                  setTimeout(
-                    () => isDuplicateEventClean = true,
-                    500
-                  );
-
-
-
-                })();
+                })()
+                : console.log("======duplicated Event!!");
 
 
             })()
-            : console.log("======duplicated Event!!");
+            : undefined
+          : undefined;
 
       }
     );
