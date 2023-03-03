@@ -11,7 +11,7 @@ import './css/custom_admonitions.scss'
 import './css/custom.scss';
 
 //https://github.com/prismjs/prism-themes#readme
-import './css/prism-themes/themes/prism-coldark-dark.css'
+import './css/prism-coldark-dark.min.css'
 
 import katex from 'katex';
 
