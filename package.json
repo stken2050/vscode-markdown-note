@@ -2,7 +2,7 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "MarkdownNote(WYSIWYG Markdown Preview)",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -22,11 +22,11 @@
       "title": "MarkdownNote",
       "properties": {
         "workbench.editor.autoLockGroups": {
-          "mainThreadWebview-sideNote": true
+          "mainThreadWebview-MarkdownNote": true
         },
-        "markdownnote.single_mode": {
+        "markdownnote.start_overlay": {
           "type": "object",
-          "description": "Single Mode, not Side by Side. The Single Mode feature involves the automatic execution of the 'markdownnote.openNote' command each time a markdown file is opened.",
+          "description": "Set the initial editing mode to Overlay instead of Side-by-Side",
           "default": {
             "true/false": true
           }
@@ -139,26 +139,24 @@
     },
     "commands": [
       {
-        "command": "markdownnote.sideNote",
-        "title": "MarkdownNote: To the Side"
+        "command": "markdownnote.overlay",
+        "title": "MarkdownNote: Overlay"
       },
       {
-        "command": "markdownnote.openNote",
-        "title": "Open with MarkdownNote (Single Mode)"
+        "command": "markdownnote.toSide",
+        "title": "MarkdownNote: To the Side"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "when": "resourceLangId == markdown",
-          "command": "markdownnote.sideNote",
+          "command": "markdownnote.overlay",
           "group": "navigation"
-        }
-      ],
-      "explorer/context": [
+        },
         {
           "when": "resourceLangId == markdown",
-          "command": "markdownnote.openNote",
+          "command": "markdownnote.toSide",
           "group": "navigation"
         }
       ]

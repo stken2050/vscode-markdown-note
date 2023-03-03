@@ -12,6 +12,7 @@ const reloadWebview = () => vscode.commands
 //issue: https://github.com/microsoft/vscode/issues/108868
 let isDuplicateEventClean = true;
 const fileNameR = (0, reactive_monad_1.R)('');
+const modeR = (0, reactive_monad_1.R)(1); //overlay:1, side:2
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -40,8 +41,11 @@ class NotePanel {
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
     }
-    static r() {
+    static rFile() {
         return fileNameR;
+    }
+    static rMode() {
+        return modeR;
     }
     /**
      * Renders the current webview panel if it exists otherwise a new webview panel
@@ -145,14 +149,9 @@ class NotePanel {
      * @param context A reference to the extension context
      */
     _setWebviewMessageListener(webview) {
-        fileNameR.map(fileName => {
-            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-            console.log(fileName);
-        });
         vscode_1.window.onDidChangeActiveTextEditor(() => {
             var _a;
             console.log("%%%%%onDidChangeActiveTextEditor%%%%%%%%%%%%");
-            console.log("Revealing is----");
             const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
             console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
             console.log(fileName);
@@ -160,25 +159,20 @@ class NotePanel {
             !!fileName
                 ? fileName !== fileNameR.lastVal
                     ? (() => {
-                        console.log("000000000000000");
+                        console.log("@@@@@@@@@@@@@@");
                         console.log("to load !!");
                         console.log(fileName);
-                        console.log("000000000000000");
+                        console.log("@@@@@@@@@@@@@@");
                         isDuplicateEventClean
                             ? (() => {
                                 //set timer----------------
                                 isDuplicateEventClean = false;
                                 setTimeout(() => isDuplicateEventClean = true, 500); //--------------------------
-                                const singleMode = vscode.workspace
-                                    .getConfiguration("markdownnote.single_mode");
-                                console.log("====singleMode ?");
-                                console.log(singleMode["true/false"]);
-                                console.log("---------------");
-                                singleMode["true/false"]
+                                modeR.lastVal === 1
                                     ? vscode.commands
-                                        .executeCommand("markdownnote.openNote")
+                                        .executeCommand("markdownnote.overlay")
                                     : vscode.commands
-                                        .executeCommand("markdownnote.sideNote");
+                                        .executeCommand("markdownnote.toSide");
                             })()
                             : console.log("======duplicated Event!!");
                     })()

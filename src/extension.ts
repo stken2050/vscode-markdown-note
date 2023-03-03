@@ -9,14 +9,8 @@ export function activate(context: ExtensionContext) {
 
   console.log("!!!!!markdownnote Activated!!!!!");
 
-  const fileNameR = NotePanel.r();
-
-  fileNameR
-    .map(fileName => {
-      console.log("$$$$$extension.ts$$$$$$$");
-      console.log(fileName);
-      console.log("############");
-    });
+  const fileNameR = NotePanel.rFile();
+  const modeR = NotePanel.rMode();
 
   const f = (mode: number) => () => {
     const fileName =
@@ -32,27 +26,29 @@ export function activate(context: ExtensionContext) {
       })()
       : undefined;
 
+    modeR.next(mode);
+
   };
 
   const f1 = f(1);
   const f2 = f(2);
-  const openNoteCommand =
-    commands.registerCommand("markdownnote.openNote", f1);
-  const sideNoteCommand =
-    commands.registerCommand("markdownnote.sideNote", f2);
+  const overlayCommand =
+    commands.registerCommand("markdownnote.overlay", f1);
+  const toSideCommand =
+    commands.registerCommand("markdownnote.toSide", f2);
 
   // Add command to the extension context
-  context.subscriptions.push(openNoteCommand);
-  context.subscriptions.push(sideNoteCommand);
+  context.subscriptions.push(overlayCommand);
+  context.subscriptions.push(toSideCommand);
 
-  const singleMode =
-    workspace.getConfiguration("markdownnote.single_mode");
+  const overlay =
+    workspace.getConfiguration("markdownnote.start_overlay");
 
-  console.log("====singleMode ?");
-  console.log(singleMode["true/false"]);
+  console.log("%%%%% start_overlay ? %%%%%");
+  console.log(overlay["true/false"]);
   console.log("---------------");
 
-  singleMode["true/false"]
+  overlay["true/false"]
     ? f1()  // single mode
     : f2(); // open to the side
 

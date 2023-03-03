@@ -9,7 +9,6 @@ import * as vscode from 'vscode';
 
 import * as fs from "node:fs/promises";
 
-
 const reloadWebview = () =>
   vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
@@ -19,6 +18,7 @@ let isDuplicateEventClean = true;
 
 const fileNameR = R('');
 
+const modeR = R(1); //overlay:1, side:2
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -57,9 +57,11 @@ export class NotePanel {
 
   }
 
-  public static r()
-  {
+  public static rFile() {
     return fileNameR;
+  }
+  public static rMode() {
+    return modeR;
   }
   /**
    * Renders the current webview panel if it exists otherwise a new webview panel
@@ -178,16 +180,9 @@ export class NotePanel {
    */
   private _setWebviewMessageListener(webview: Webview) {
 
-    fileNameR.map(fileName => {
-
-      console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-      console.log(fileName);
-    });
-
     window.onDidChangeActiveTextEditor(
       () => {
         console.log("%%%%%onDidChangeActiveTextEditor%%%%%%%%%%%%");
-        console.log("Revealing is----");
 
         const fileName =
           window.activeTextEditor?.document.uri
@@ -203,10 +198,10 @@ export class NotePanel {
           ? fileName !== fileNameR.lastVal
             ? (() => {
 
-              console.log("000000000000000");
+              console.log("@@@@@@@@@@@@@@");
               console.log("to load !!");
               console.log(fileName);
-              console.log("000000000000000");
+              console.log("@@@@@@@@@@@@@@");
 
               isDuplicateEventClean
                 ? (() => {
@@ -217,19 +212,11 @@ export class NotePanel {
                     500
                   ); //--------------------------
 
-                  const singleMode =
-                    vscode.workspace
-                      .getConfiguration("markdownnote.single_mode");
-
-                  console.log("====singleMode ?");
-                  console.log(singleMode["true/false"]);
-                  console.log("---------------");
-
-                  singleMode["true/false"]
+                  modeR.lastVal === 1
                     ? vscode.commands
-                      .executeCommand("markdownnote.openNote")
+                      .executeCommand("markdownnote.overlay")
                     : vscode.commands
-                      .executeCommand("markdownnote.sideNote");
+                      .executeCommand("markdownnote.toSide");
 
                 })()
                 : console.log("======duplicated Event!!");
