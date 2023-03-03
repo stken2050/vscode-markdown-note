@@ -7,19 +7,13 @@ const getNonce_1 = require("../utilities/getNonce");
 const reactive_monad_1 = require("../utilities/reactive_monad");
 const vscode = require("vscode");
 const fs = require("node:fs/promises");
-const filePathR = (0, reactive_monad_1.R)('');
-const getFileName = () => { var _a, _b; return ((_b = (_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document) === null || _b === void 0 ? void 0 : _b.fileName) || ""; };
-const getExsitingFileName = (fileName) => (fileName !== "")
-    ? filePathR.next(fileName)
-    : filePathR.next(filePathR.lastVal);
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
-const keybindsR = (0, reactive_monad_1.R)(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
-const imageRepositoryR = (0, reactive_monad_1.R)(vscode.workspace.getConfiguration('markdownnote.image_repository'));
-const getConfig = () => {
-    keybindsR.next(vscode.workspace.getConfiguration('markdownnote.webkeybindings'));
-    imageRepositoryR.next(vscode.workspace.getConfiguration('markdownnote.image_repository'));
-};
+let isRevealing = false;
+//issue: https://github.com/microsoft/vscode/issues/108868
+let isDuplicateEventClean = true;
+const fileNameR = (0, reactive_monad_1.R)('');
+const modeR = (0, reactive_monad_1.R)(2);
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -54,35 +48,38 @@ class NotePanel {
      *
      * @param extensionUri The URI of the directory containing the extension.
      */
-    static render(extensionUri) {
+    static render(extensionUri, fileName, mode) {
         console.log("!!!!!render");
-        console.log(filePathR.lastVal);
-        console.log("!!!!!!!!!!!!!!");
+        console.log(fileName);
+        fileNameR.next(fileName);
+        console.log("REVEALING======================");
+        isRevealing = true;
         console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
-        if (NotePanel.currentPanel) {
+        (NotePanel.currentPanel)
             // If the webview panel already exists reveal it
-            reloadWebview();
-            NotePanel.currentPanel._panel.reveal(vscode_1.ViewColumn.Two);
-        }
-        else {
-            // If a webview panel does not already exist create and show a new one
-            const panel = vscode_1.window.createWebviewPanel(
-            // Panel view type
-            "showNote", 
-            // Panel title
-            "Markdown Note", 
-            // The editor column the panel should be displayed in
-            vscode_1.ViewColumn.Two, 
-            // Extra panel configurations
-            {
-                // Enable JavaScript in the webview
-                enableScripts: true,
-                // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-                localResourceRoots: [vscode_1.Uri.joinPath(extensionUri, "out"), vscode_1.Uri.joinPath(extensionUri, "webview-ui/build")],
-            });
-            NotePanel.currentPanel = new NotePanel(panel, extensionUri);
-        }
-        ;
+            ? (() => {
+                var _a;
+                reloadWebview(); //clean up the exitisting webview
+                (_a = NotePanel.currentPanel) === null || _a === void 0 ? void 0 : _a._panel.reveal(mode);
+            })()
+            : (() => {
+                // If a webview panel does not already exist create and show a new one
+                const panel = vscode_1.window.createWebviewPanel(
+                // Panel view type
+                "MarkdownNote", 
+                // Panel title
+                "MarkdownNote", 
+                // The editor column the panel should be displayed in
+                mode, 
+                // Extra panel configurations
+                {
+                    // Enable JavaScript in the webview
+                    enableScripts: true,
+                    // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
+                    localResourceRoots: [vscode_1.Uri.joinPath(extensionUri, "out"), vscode_1.Uri.joinPath(extensionUri, "webview-ui/build")],
+                });
+                NotePanel.currentPanel = new NotePanel(panel, extensionUri);
+            })();
     }
     ;
     /**
@@ -126,9 +123,9 @@ class NotePanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
 
-          <link rel="stylesheet" 
+          <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
-           integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" 
+           integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0"
            crossorigin="anonymous">
 
 
@@ -151,37 +148,26 @@ class NotePanel {
     _setWebviewMessageListener(webview) {
         vscode_1.window.onDidChangeActiveTextEditor(() => {
             console.log("onDidChangeActiveTextEditor!!!!!");
-            const fileName = getFileName();
-            (fileName !== "") && (fileName !== filePathR.lastVal)
-                ? reloadWebview()
-                : undefined;
-        });
-        keybindsR.map((keybinds) => webview.postMessage({
-            cmd: 'keybinds',
-            obj: keybinds
-        }));
-        imageRepositoryR.map((imageRepository) => webview.postMessage({
-            cmd: 'imageRepository',
-            obj: imageRepository
-        }));
-        vscode.workspace.onDidChangeConfiguration(getConfig);
-        filePathR.map((filePath) => {
-            console.log("@@ filePathR.lastVal @@@@@@@@@@@");
-            console.log(filePath);
-            filePath === ""
-                ? vscode.commands
-                    .executeCommand("workbench.action.focusFirstEditorGroup")
-                : (() => {
-                    fs.readFile(filePath, { encoding: "utf8" })
-                        .then(mdText => {
-                        webview.postMessage({
-                            cmd: 'load',
-                            obj: mdText
-                        });
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                })();
+            console.log(isRevealing);
+            isRevealing
+                ? isRevealing = false
+                : isDuplicateEventClean
+                    ? (() => {
+                        console.log("not revealing, so sending openNote command");
+                        const singleMode = vscode.workspace
+                            .getConfiguration("markdownnote.single_mode");
+                        console.log("====singleMode ?");
+                        console.log(singleMode["true/false"]);
+                        console.log("---------------");
+                        singleMode["true/false"]
+                            ? vscode.commands
+                                .executeCommand("markdownnote.openNote")
+                            : vscode.commands
+                                .executeCommand("markdownnote.sideNote");
+                        isDuplicateEventClean = false;
+                        setTimeout(() => isDuplicateEventClean = true, 500);
+                    })()
+                    : console.log("======duplicated Event!!");
         });
         webview.onDidReceiveMessage((message) => {
             const command = message.command;
@@ -192,12 +178,30 @@ class NotePanel {
                     vscode_1.window.showInformationMessage(text);
                     return;
                 case "requestLoad":
-                    console.log('requestLoad!!!!!!!!!!!!!!!!!!!!!');
-                    getExsitingFileName(getFileName());
-                    getConfig();
+                    console.log('webView: loaded and requestLoad!!!!!!!!!!!');
+                    const keybinds = vscode.workspace.getConfiguration('markdownnote.webkeybindings');
+                    const imageRepository = vscode.workspace.getConfiguration('markdownnote.image_repository');
+                    webview.postMessage({
+                        cmd: 'keybinds',
+                        obj: keybinds
+                    });
+                    webview.postMessage({
+                        cmd: 'imageRepository',
+                        obj: imageRepository
+                    });
+                    fs.readFile(fileNameR.lastVal, { encoding: "utf8" })
+                        .then(mdText => {
+                        webview
+                            .postMessage({
+                            cmd: 'load',
+                            obj: mdText
+                        });
+                    }).catch(err => {
+                        console.error(err);
+                    });
                     return;
                 case "save":
-                    const promise = fs.writeFile(filePathR.lastVal, text);
+                    const promise = fs.writeFile(fileNameR.lastVal, text);
                     return;
             }
         }, undefined, this._disposables);

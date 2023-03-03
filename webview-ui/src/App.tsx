@@ -122,10 +122,16 @@ const checkHtml = (id: string) => (html) => {
 const showHtml =
   (id: string) => {
     const elEdit = document.getElementById("edit" + id);
-    elEdit.style.display = 'none';
+
+    !!elEdit
+      ? elEdit.style.display = 'none'
+      : undefined;
 
     const parentEl = document.getElementById("html" + id);
-    parentEl.style.display = '';
+
+    !!parentEl
+      ? parentEl.style.display = ''
+      : undefined;
   };
 
 const showEdit =
@@ -133,10 +139,14 @@ const showEdit =
     console.log('showEdit');
 
     const elHtml = document.getElementById("html" + id);
-    elHtml.style.display = 'none';
+    !!elHtml
+      ? elHtml.style.display = 'none'
+      : undefined;
 
     const elEdit = document.getElementById("edit" + id);
-    elEdit.style.display = '';
+    !!elEdit
+      ? elEdit.style.display = ''
+      : undefined;
 
   };
 
@@ -145,10 +155,14 @@ const showEditFocus =
     console.log('showEditFocus');
 
     const elHtml = document.getElementById("html" + id);
-    elHtml.style.display = 'none';
+    !!elHtml
+      ? elHtml.style.display = 'none'
+      : undefined;
 
     const elEdit = document.getElementById("edit" + id);
-    elEdit.style.display = '';
+    !!elEdit
+      ? elEdit.style.display = ''
+      : undefined;
 
     elEdit.focus();
 
@@ -228,12 +242,18 @@ const hStyle = idEdit => {
                   : hFont[0];
   };
 
-  window.setTimeout(f0, 100);
+  !!elEdit
+    ? f0()
+    : undefined;
+
 };
 
 const html = id => {
 
-  textList[id] = document.getElementById("edit" + id).innerText;
+  textList[id] =
+    !!document.getElementById("edit" + id)
+      ? document.getElementById("edit" + id).innerText
+      : "";
 
   id === deletingID.lastVal
     ? undefined

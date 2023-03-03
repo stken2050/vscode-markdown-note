@@ -1,8 +1,8 @@
 {
   "name": "markdownnote",
   "displayName": "MarkdownNote",
-  "description": "Markdown Note(Editable Preview)",
-  "version": "0.9.0",
+  "description": "MarkdownNote(WYSIWYG Markdown Preview)",
+  "version": "0.10.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -22,7 +22,14 @@
       "title": "MarkdownNote",
       "properties": {
         "workbench.editor.autoLockGroups": {
-          "mainThreadWebview-showNote": true
+          "mainThreadWebview-sideNote": true
+        },
+        "markdownnote.single_mode": {
+          "type": "object",
+          "description": "Single Mode, not Side by Side. The Single Mode feature involves the automatic execution of the 'markdownnote.openNote' command each time a markdown file is opened.",
+          "default": {
+            "true/false": false
+          }
         },
         "markdownnote.image_repository": {
           "type": "object",
@@ -70,7 +77,7 @@
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "Escape"
+              "code": "Backspace"
             },
             "bold": {
               "shiftKey": false,
@@ -132,16 +139,27 @@
     },
     "commands": [
       {
-        "command": "markdownnote.showNote",
-        "title": "MarkdownNote(EditablePreview): ShowToTheSide"
+        "command": "markdownnote.sideNote",
+        "title": "MarkdownNote: To the Side"
+      },
+      {
+        "command": "markdownnote.openNote",
+        "title": "Open with MarkdownNote (Single Mode)"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "when": "resourceLangId == markdown",
-          "command": "markdownnote.showNote",
-          "group": "z_commands"
+          "command": "markdownnote.sideNote",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownnote.openNote",
+          "group": "navigation"
         }
       ]
     }
@@ -168,6 +186,6 @@
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
     "typescript": "^4.8.2",
-    "@vscode/vsce": "*"
+    "@vscode/vsce": "2.18.0"
   }
 }
