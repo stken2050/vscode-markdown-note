@@ -11,15 +11,12 @@ import { R } from './utilities/reactive_monad';
 import { admonitionsPlugin } from "./utilities/admonitionsPlugin";
 import { setEndOfContenteditable } from "./utilities/setEndOfContenteditable";
 
-
 // Default SortableJS
 import Sortable from 'sortablejs';
-
 
 import { remark } from 'remark';
 import remarkBreaks from 'remark-breaks'
 import remarkDirective from 'remark-directive';
-
 
 import remarkMdx from 'remark-mdx'
 import remarkGfm from 'remark-gfm'
@@ -29,9 +26,6 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import rehypeFormat from 'rehype-format'
 import rehypeStringify from 'rehype-stringify'
-import { resolve } from "path";
-
-
 
 // In order to use the Webview UI Toolkit web components they
 // must be registered with the browser (i.e. webview) using the
@@ -53,11 +47,7 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 // provideVSCodeDesignSystem().register(allComponents.register());
 
 
-
-
 //=================================================================
-
-
 const hFont = {};
 
 const [cellsStream, cellsStreamNext] = createSignal([]);
@@ -66,108 +56,15 @@ const contentStreams = {};
 const textList = {};
 const ID = new Map(); //ID.get(cell)
 
+const deletingID = R(0);
+
 const historyEdit = [];
 const undoHistoryEdit = [];
 
 let imageRepository;
-
 let keybinds;
 
 //==========================================
-
-const keyMatch = evt => cmd =>
-  (evt.shiftKey === keybinds[cmd].shiftKey) &&
-  (evt.ctrlKey === keybinds[cmd].ctrlKey) &&
-  (evt.altKey === keybinds[cmd].altKey) &&
-  (evt.code == keybinds[cmd].code);
-
-
-const markHtml =
-  (id: string) => {
-
-    const rmPromise = remark()
-
-      .use(remarkMdx)
-      .use(remarkGfm)
-      .use(remarkBreaks)
-      .use(remarkMath)
-      .use(remarkDirective)
-      .use(admonitionsPlugin)
-      .use(remarkRehype as any)
-      .use(rehypePrism)
-      .use(rehypeKatex)
-      .use(rehypeFormat)
-      .use(rehypeStringify)
-
-      .process(textList[id]);
-
-    rmPromise.then((html) => checkHtml(id)(html));
-  };
-
-const checkHtml = (id: string) => (html) => {
-
-  const div = document.createElement('div');
-  div.innerHTML = html.toString();
-
-  const image = div.querySelector('img') != null;
-
-  contentStreams[id].next(div);
-
-  div.innerText.length <= 2 && !image
-    ? showEdit(id)
-    : showHtml(id);
-
-};
-
-const showHtml =
-  (id: string) => {
-    const elEdit = document.getElementById("edit" + id);
-
-    !!elEdit
-      ? elEdit.style.display = 'none'
-      : undefined;
-
-    const parentEl = document.getElementById("html" + id);
-
-    !!parentEl
-      ? parentEl.style.display = ''
-      : undefined;
-  };
-
-const showEdit =
-  (id: string) => {
-    console.log('showEdit');
-
-    const elHtml = document.getElementById("html" + id);
-    !!elHtml
-      ? elHtml.style.display = 'none'
-      : undefined;
-
-    const elEdit = document.getElementById("edit" + id);
-    !!elEdit
-      ? elEdit.style.display = ''
-      : undefined;
-
-  };
-
-const showEditFocus =
-  (id: string) => {
-    console.log('showEditFocus');
-
-    const elHtml = document.getElementById("html" + id);
-    !!elHtml
-      ? elHtml.style.display = 'none'
-      : undefined;
-
-    const elEdit = document.getElementById("edit" + id);
-    !!elEdit
-      ? elEdit.style.display = ''
-      : undefined;
-
-    elEdit.focus();
-
-    setEndOfContenteditable(elEdit);
-  };
 
 const newCellID = R('');
 
@@ -183,13 +80,6 @@ const addCell = ev => id => {
     );
 
   cellsStreamNext(cells => newCells(cells));
-  /*
-    const f = () => {
-      document.getElementById('html' + newCellID.lastVal).style.display = 'none';
-      document.getElementById('edit' + newCellID.lastVal).focus();
-    };
-    window.setTimeout(f, 0);
-  */
 
   setTimeout(() => showEditFocus(newCellID.lastVal), 0);
 
@@ -238,7 +128,8 @@ const upCell = (ev) => id => {
           : (() => {
             const targetCell = cells[i - 1];
             const targetID = ID.get(targetCell);
-            showEditFocus(targetID);
+            setTimeout(() =>
+              showEditFocus(targetID), 100);
             onBlur(ev)(id);
           })()
       })()
@@ -271,7 +162,8 @@ const downCell = (ev) => id => {
           : (() => {
             const targetCell = cells[i + 1];
             const targetID = ID.get(targetCell);
-            showEditFocus(targetID);
+            setTimeout(() =>
+              showEditFocus(targetID), 100);
             onBlur(ev)(id);
           })()
       })()
@@ -286,8 +178,6 @@ const downCell = (ev) => id => {
 
 };
 
-
-const deletingID = R(0);
 
 const hStyle = idEdit => {
 
@@ -331,19 +221,7 @@ const html = id => {
 
 };
 
-const onInput = idEdit => {
-  console.log("onInput");
-  console.log(idEdit);
-  hStyle(idEdit);
-};
-
-const onBlur = (ev) => id => {
-  html(id);
-  console.log('onBlur');
-  cellToMarkSave();
-};
-
-
+//------------------------------------------------------
 const replaceSelected =
   before => after => {
     const sel = window.getSelection();
@@ -355,7 +233,6 @@ const replaceSelected =
 
     range.deleteContents();
     range.insertNode(document.createTextNode(text));
-
 
   };
 
@@ -435,7 +312,6 @@ const imgPaste = ev => id => {
   ev.preventDefault();
   replaceURLpaste('!');
 };
-
 
 //===========================================
 
@@ -597,6 +473,85 @@ const redo = ev => id => {
 
 };
 
+
+//---event----------------------------------------------
+const onClick = id => showEditFocus(id);
+
+const onBlur = (ev) => id => {
+  html(id);
+  console.log('onBlur');
+  cellToMarkSave();
+};
+
+const onInput = idEdit => {
+  console.log("onInput");
+  console.log(idEdit);
+  hStyle(idEdit);
+};
+
+const onKeyDown = ev => id => {
+
+  const history = () => {
+    console.log("history--------------");
+    const elEdit = document.getElementById("edit" + id);
+    const text = elEdit.innerText;
+    console.log(text);
+    const history = historyEdit[id];
+    console.log(history);
+    console.log(history[history.length - 1]);
+
+    history[history.length - 1] === text
+      ? undefined
+      : history[history.length] = text;
+
+    console.log(history);
+  };
+
+  const keyMatch = evt => cmd =>
+    (keybinds[cmd].shiftKey === evt.shiftKey) &&
+    (keybinds[cmd].ctrlKey === evt.ctrlKey) &&
+    (keybinds[cmd].altKey === evt.altKey) &&
+    (keybinds[cmd].code.includes(evt.code));
+
+  keyMatch(ev)("paste")
+    ? paste(ev)(id)
+    : keyMatch(ev)("blur")
+      ? onBlur(ev)(id)
+      : keyMatch(ev)("undo")
+        ? undo(ev)(id)
+        : keyMatch(ev)("redo")
+          ? redo(ev)(id)
+          : keyMatch(ev)("cell-add")
+            ? addCell(ev)(id)
+            : keyMatch(ev)("cell-delete")
+              ? deleteCell(ev)(id)
+              : keyMatch(ev)("cell-up")
+                ? upCell(ev)(id)
+                : keyMatch(ev)("cell-down")
+                  ? downCell(ev)(id)
+                  : keyMatch(ev)("bold")
+                    ? bold(ev)(id)
+                    : keyMatch(ev)("italic")
+                      ? italic(ev)(id)
+                      : keyMatch(ev)("inlinecode")
+                        ? inlinecode(ev)(id)
+                        : keyMatch(ev)("code")
+                          ? code(ev)(id)
+                          : keyMatch(ev)("inlinemath")
+                            ? inlinemath(ev)(id)
+                            : keyMatch(ev)("math")
+                              ? math(ev)(id)
+                              : keyMatch(ev)("url-paste")
+                                ? urlPaste(ev)(id)
+                                : keyMatch(ev)("img-paste")
+                                  ? imgPaste(ev)(id)
+                                  : keyMatch(ev)("admonition")
+                                    ? admonition(ev)(id)
+                                    : setTimeout(history, 0);
+
+
+};
+
 const Cell: Component = (text: string) => {
   const id = getRand();
   console.log(id);
@@ -612,78 +567,6 @@ const Cell: Component = (text: string) => {
   contentStreams[id] = contentStream;
   contentStreams[id].next = contentStreamNext;
 
-  //---event----------------------------------------------
-  const onKeyDown = ev => id => {
-
-
-    const f0 = () => {
-      console.log("history--------------");
-      const elEdit = document.getElementById("edit" + id);
-      const text = elEdit.innerText;
-
-      console.log(text);
-      const history = historyEdit[id];
-
-
-      console.log(history);
-
-      console.log(history[history.length - 1]);
-
-
-      history[history.length - 1] === text
-        ? undefined
-        : history[history.length] = text;
-
-      console.log(history);
-
-    };
-
-    keyMatch(ev)("paste")
-      ? paste(ev)(id)
-      : keyMatch(ev)("blur")
-        ? onBlur(ev)(id)
-        : keyMatch(ev)("undo")
-          ? undo(ev)(id)
-          : keyMatch(ev)("redo")
-            ? redo(ev)(id)
-            : keyMatch(ev)("cell-add")
-              ? addCell(ev)(id)
-              : keyMatch(ev)("cell-delete")
-                ? deleteCell(ev)(id)
-                : keyMatch(ev)("cell-up")
-                  ? upCell(ev)(id)
-                  : keyMatch(ev)("cell-down")
-                    ? downCell(ev)(id)
-                    : keyMatch(ev)("bold")
-                      ? bold(ev)(id)
-                      : keyMatch(ev)("italic")
-                        ? italic(ev)(id)
-                        : keyMatch(ev)("inlinecode")
-                          ? inlinecode(ev)(id)
-                          : keyMatch(ev)("code")
-                            ? code(ev)(id)
-                            : keyMatch(ev)("inlinemath")
-                              ? inlinemath(ev)(id)
-                              : keyMatch(ev)("math")
-                                ? math(ev)(id)
-                                : keyMatch(ev)("url-paste")
-                                  ? urlPaste(ev)(id)
-                                  : keyMatch(ev)("img-paste")
-                                    ? imgPaste(ev)(id)
-                                    : keyMatch(ev)("admonition")
-                                      ? admonition(ev)(id)
-                                      : window.setTimeout(f0, 0);
-
-
-  };
-
-
-
-
-  //---event----------------------------------------------
-  const onClick = id => showEditFocus(id);
-
-  //------------------------------------------------------
   const div =
 
     <div class="cell" id={id}>
@@ -718,13 +601,100 @@ const Cell: Component = (text: string) => {
     html(id);
   };
 
-  window.setTimeout(
+  setTimeout(
     () => initCell()
     , 0);
 
-
   return div;
 };
+
+//=================================================================
+const markHtml =
+  (id: string) => {
+
+    const rmPromise = remark()
+
+      .use(remarkMdx)
+      .use(remarkGfm)
+      .use(remarkBreaks)
+      .use(remarkMath)
+      .use(remarkDirective)
+      .use(admonitionsPlugin)
+      .use(remarkRehype as any)
+      .use(rehypePrism)
+      .use(rehypeKatex)
+      .use(rehypeFormat)
+      .use(rehypeStringify)
+
+      .process(textList[id]);
+
+    rmPromise.then((html) => checkHtml(id)(html));
+  };
+
+const checkHtml = (id: string) => (html) => {
+
+  const div = document.createElement('div');
+  div.innerHTML = html.toString();
+
+  const image = div.querySelector('img') != null;
+
+  contentStreams[id].next(div);
+
+  !image && div.innerText.length === 0
+    ? showEdit(id)
+    : showHtml(id);
+
+};
+
+const showHtml =
+  (id: string) => {
+    const elEdit = document.getElementById("edit" + id);
+
+    !!elEdit
+      ? elEdit.style.display = 'none'
+      : undefined;
+
+    const parentEl = document.getElementById("html" + id);
+
+    !!parentEl
+      ? parentEl.style.display = ''
+      : undefined;
+  };
+
+const showEdit =
+  (id: string) => {
+    console.log('showEdit');
+
+    const elHtml = document.getElementById("html" + id);
+    !!elHtml
+      ? elHtml.style.display = 'none'
+      : undefined;
+
+    const elEdit = document.getElementById("edit" + id);
+    !!elEdit
+      ? elEdit.style.display = ''
+      : undefined;
+
+  };
+
+const showEditFocus =
+  (id: string) => {
+    console.log('showEditFocus');
+
+    const elHtml = document.getElementById("html" + id);
+    !!elHtml
+      ? elHtml.style.display = 'none'
+      : undefined;
+
+    const elEdit = document.getElementById("edit" + id);
+    !!elEdit
+      ? elEdit.style.display = ''
+      : undefined;
+
+    elEdit.focus();
+
+    setEndOfContenteditable(elEdit);
+  };
 
 //=================================================================
 

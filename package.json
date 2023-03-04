@@ -2,7 +2,7 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "MarkdownNote(WYSIWYG Markdown Preview)",
-  "version": "0.12.5",
+  "version": "0.15.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -41,109 +41,145 @@
         },
         "markdownnote.webkeybindings": {
           "type": "object",
-          "description": "get keycode via https://js-1nlwk2.stackblitz.io",
+          "description": "get keycode via https://stackblitz.com/edit/js-hvpmar?file=index.js",
           "default": {
             "blur": {
               "shiftKey": false,
               "ctrlKey": false,
               "altKey": false,
-              "code": "Escape"
+              "code": [
+                "Escape"
+              ]
             },
             "paste": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyV"
+              "code": [
+                "KeyV"
+              ]
             },
             "undo": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyZ"
+              "code": [
+                "KeyZ"
+              ]
             },
             "redo": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyY"
+              "code": [
+                "KeyY"
+              ]
             },
             "cell-add": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "Enter"
+              "code": [
+                "Enter"
+              ]
             },
             "cell-delete": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "Backspace"
+              "code": [
+                "Backslash",
+                "Backspace",
+                "Escape"
+              ]
             },
             "cell-up": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "ArrowUp"
+              "code": [
+                "ArrowUp"
+              ]
             },
             "cell-down": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "ArrowDown"
+              "code": [
+                "ArrowDown"
+              ]
             },
             "bold": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyB"
+              "code": [
+                "KeyB"
+              ]
             },
             "italic": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyI"
+              "code": [
+                "KeyI"
+              ]
             },
             "inlinecode": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyK"
+              "code": [
+                "KeyK"
+              ]
             },
             "code": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "F1"
+              "code": [
+                "F1"
+              ]
             },
             "inlinemath": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyN"
+              "code": [
+                "KeyN"
+              ]
             },
             "math": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyM"
+              "code": [
+                "KeyM"
+              ]
             },
             "url-paste": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyL"
+              "code": [
+                "KeyL"
+              ]
             },
             "img-paste": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyP"
+              "code": [
+                "KeyP"
+              ]
             },
             "admonition": {
               "shiftKey": false,
               "ctrlKey": true,
               "altKey": false,
-              "code": "KeyO"
+              "code": [
+                "KeyO"
+              ]
             }
           }
         }
@@ -156,7 +192,17 @@
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
       {
+        "key": "ctrl+\\",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
         "key": "ctrl+backspace",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+escape",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
