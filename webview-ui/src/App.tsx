@@ -223,7 +223,7 @@ const deleteCell = (ev) => id => {
 const upCell = (ev) => id => {
   console.log('on upCell');
 
-  const f = (sum: Element, cell: Element, i: number, cells: Element[]) => {
+  const f = (cell: Element, i: number, cells: Element[]) => {
 
     cell.id === id
       ? (() => {
@@ -233,7 +233,7 @@ const upCell = (ev) => id => {
         console.log(i);
         console.log("%%%%%%%%%%%%%%%%%");
 
-        i === 0
+        i === 0 //cell is top
           ? undefined
           : (() => {
             const targetCell = cells[i - 1];
@@ -241,23 +241,22 @@ const upCell = (ev) => id => {
             showEditFocus(targetID);
             onBlur(ev)(id);
           })()
-
       })()
       : undefined;
 
-    return sum;
+    return cell;
   };
 
   Array
     .from(document.getElementsByClassName('cell'))
-    .reduce(f);
+    .map(f);
 
 };
 
 const downCell = (ev) => id => {
   console.log('on downCell');
 
-  const f = (sum: Element, cell: Element, i: number, cells: Element[]) => {
+  const f = (cell: Element, i: number, cells: Element[]) => {
 
     cell.id === id
       ? (() => {
@@ -267,7 +266,7 @@ const downCell = (ev) => id => {
         console.log(i);
         console.log("%%%%%%%%%%%%%%%%%");
 
-        (Array.from(cells).length - 1) === i
+        i === Array.from(cells).length - 1 //cell is buttom
           ? undefined
           : (() => {
             const targetCell = cells[i + 1];
@@ -275,16 +274,15 @@ const downCell = (ev) => id => {
             showEditFocus(targetID);
             onBlur(ev)(id);
           })()
-
       })()
       : undefined;
 
-    return sum;
+    return cell;
   };
 
   Array
     .from(document.getElementsByClassName('cell'))
-    .reduce(f);
+    .map(f);
 
 };
 
