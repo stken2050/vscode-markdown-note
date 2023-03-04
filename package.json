@@ -2,7 +2,7 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "MarkdownNote(WYSIWYG Markdown Preview)",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -79,6 +79,18 @@
               "altKey": false,
               "code": "Backspace"
             },
+            "cell-up": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "ArrowUp"
+            },
+            "cell-down": {
+              "shiftKey": false,
+              "ctrlKey": true,
+              "altKey": false,
+              "code": "ArrowDown"
+            },
             "bold": {
               "shiftKey": false,
               "ctrlKey": true,
@@ -137,6 +149,68 @@
         }
       }
     },
+    "keybindings": [
+      {
+        "key": "ctrl+enter",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+backspace",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+up",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+down",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+b",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+i",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+k",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+f1",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+n",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+m",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+l",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+o",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      }
+    ],
     "commands": [
       {
         "command": "markdownnote.overlay",
@@ -145,6 +219,10 @@
       {
         "command": "markdownnote.toSide",
         "title": "MarkdownNote: To the Side"
+      },
+      {
+        "command": "markdownnote.doNothing",
+        "title": "MarkdownNote: Do Nothing for keybindings in WebView"
       }
     ],
     "menus": {

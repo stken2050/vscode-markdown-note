@@ -23,9 +23,11 @@ function activate(context) {
     const f2 = f(2);
     const overlayCommand = vscode_1.commands.registerCommand("markdownnote.overlay", f1);
     const toSideCommand = vscode_1.commands.registerCommand("markdownnote.toSide", f2);
+    const doNothingCommand = vscode_1.commands.registerCommand("markdownnote.doNothing", () => { console.log("..."); });
     // Add command to the extension context
     context.subscriptions.push(overlayCommand);
     context.subscriptions.push(toSideCommand);
+    context.subscriptions.push(doNothingCommand);
     const overlay = vscode_1.workspace.getConfiguration("markdownnote.start_overlay");
     console.log("%%%%% start_overlay ? %%%%%");
     console.log(overlay["true/false"]);

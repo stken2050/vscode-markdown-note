@@ -183,17 +183,22 @@ const addCell = ev => id => {
     );
 
   cellsStreamNext(cells => newCells(cells));
+  /*
+    const f = () => {
+      document.getElementById('html' + newCellID.lastVal).style.display = 'none';
+      document.getElementById('edit' + newCellID.lastVal).focus();
+    };
+    window.setTimeout(f, 0);
+  */
 
-  const f = () => {
-    document.getElementById('html' + newCellID.lastVal).style.display = 'none';
-    document.getElementById('edit' + newCellID.lastVal).focus();
-  };
-  window.setTimeout(f, 0);
+  setTimeout(() => showEditFocus(newCellID.lastVal), 0);
 
 };
 
 const deleteCell = (ev) => id => {
   console.log('on deleteCell');
+
+  upCell(ev)(id);
 
   const newCells = cells =>
     cells.flatMap(
@@ -213,9 +218,76 @@ const deleteCell = (ev) => id => {
 
       });
 
-  cellToMarkSave();
+};
+
+const upCell = (ev) => id => {
+  console.log('on upCell');
+
+  const f = (sum: Element, cell: Element, i: number, cells: Element[]) => {
+
+    cell.id === id
+      ? (() => {
+
+        console.log("cell count%%%%%%%%%%%%%%%%");
+        console.log(Array.from(cells).length - 1);
+        console.log(i);
+        console.log("%%%%%%%%%%%%%%%%%");
+
+        i === 0
+          ? undefined
+          : (() => {
+            const targetCell = cells[i - 1];
+            const targetID = ID.get(targetCell);
+            showEditFocus(targetID);
+            onBlur(ev)(id);
+          })()
+
+      })()
+      : undefined;
+
+    return sum;
+  };
+
+  Array
+    .from(document.getElementsByClassName('cell'))
+    .reduce(f);
 
 };
+
+const downCell = (ev) => id => {
+  console.log('on downCell');
+
+  const f = (sum: Element, cell: Element, i: number, cells: Element[]) => {
+
+    cell.id === id
+      ? (() => {
+
+        console.log("cell count%%%%%%%%%%%%%%%%");
+        console.log(Array.from(cells).length - 1);
+        console.log(i);
+        console.log("%%%%%%%%%%%%%%%%%");
+
+        (Array.from(cells).length - 1) === i
+          ? undefined
+          : (() => {
+            const targetCell = cells[i + 1];
+            const targetID = ID.get(targetCell);
+            showEditFocus(targetID);
+            onBlur(ev)(id);
+          })()
+
+      })()
+      : undefined;
+
+    return sum;
+  };
+
+  Array
+    .from(document.getElementsByClassName('cell'))
+    .reduce(f);
+
+};
+
 
 const deletingID = R(0);
 
@@ -580,25 +652,29 @@ const Cell: Component = (text: string) => {
               ? addCell(ev)(id)
               : keyMatch(ev)("cell-delete")
                 ? deleteCell(ev)(id)
-                : keyMatch(ev)("bold")
-                  ? bold(ev)(id)
-                  : keyMatch(ev)("italic")
-                    ? italic(ev)(id)
-                    : keyMatch(ev)("inlinecode")
-                      ? inlinecode(ev)(id)
-                      : keyMatch(ev)("code")
-                        ? code(ev)(id)
-                        : keyMatch(ev)("inlinemath")
-                          ? inlinemath(ev)(id)
-                          : keyMatch(ev)("math")
-                            ? math(ev)(id)
-                            : keyMatch(ev)("url-paste")
-                              ? urlPaste(ev)(id)
-                              : keyMatch(ev)("img-paste")
-                                ? imgPaste(ev)(id)
-                                : keyMatch(ev)("admonition")
-                                  ? admonition(ev)(id)
-                                  : window.setTimeout(f0, 0);
+                : keyMatch(ev)("cell-up")
+                  ? upCell(ev)(id)
+                  : keyMatch(ev)("cell-down")
+                    ? downCell(ev)(id)
+                    : keyMatch(ev)("bold")
+                      ? bold(ev)(id)
+                      : keyMatch(ev)("italic")
+                        ? italic(ev)(id)
+                        : keyMatch(ev)("inlinecode")
+                          ? inlinecode(ev)(id)
+                          : keyMatch(ev)("code")
+                            ? code(ev)(id)
+                            : keyMatch(ev)("inlinemath")
+                              ? inlinemath(ev)(id)
+                              : keyMatch(ev)("math")
+                                ? math(ev)(id)
+                                : keyMatch(ev)("url-paste")
+                                  ? urlPaste(ev)(id)
+                                  : keyMatch(ev)("img-paste")
+                                    ? imgPaste(ev)(id)
+                                    : keyMatch(ev)("admonition")
+                                      ? admonition(ev)(id)
+                                      : window.setTimeout(f0, 0);
 
 
   };

@@ -37,9 +37,15 @@ export function activate(context: ExtensionContext) {
   const toSideCommand =
     commands.registerCommand("markdownnote.toSide", f2);
 
+  const doNothingCommand =
+    commands.registerCommand("markdownnote.doNothing",
+      () => { console.log("..."); });
+
   // Add command to the extension context
   context.subscriptions.push(overlayCommand);
   context.subscriptions.push(toSideCommand);
+
+  context.subscriptions.push(doNothingCommand);
 
   const overlay =
     workspace.getConfiguration("markdownnote.start_overlay");
