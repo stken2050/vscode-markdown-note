@@ -2,7 +2,7 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "MarkdownNote(WYSIWYG Markdown Preview)",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -248,6 +248,11 @@
       },
       {
         "key": "ctrl+l",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
+        "key": "ctrl+p",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
