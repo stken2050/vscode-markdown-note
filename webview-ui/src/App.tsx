@@ -626,23 +626,37 @@ const markHtml =
       .use(rehypeFormat)
       .use(rehypeStringify)
 
-      .process(textList[id]);
+      .process(textList[id])
+      .catch(error => {
+        console.log("%%%%% reMark parser ERROR");
+        console.log(error.message)
+      });;
 
-    rmPromise.then((html) => checkHtml(id)(html));
+    rmPromise
+      .then((html) =>
+        !!html
+          ? checkHtml(id)(html)
+          : undefined
+      );
   };
 
 const checkHtml = (id: string) => (html) => {
 
   const div = document.createElement('div');
-  div.innerHTML = html.toString();
 
-  const image = div.querySelector('img') != null;
+  const f = () => {
+    div.innerHTML = html.toString();
 
-  contentStreams[id].next(div);
+    const image = div.querySelector('img') != null;
 
-  !image && div.innerText.length === 0
-    ? showEdit(id)
-    : showHtml(id);
+    contentStreams[id].next(div);
+
+    !image && div.innerText.length === 0
+      ? showEdit(id)
+      : showHtml(id);
+  };
+
+  setTimeout(f, 100);
 
 };
 

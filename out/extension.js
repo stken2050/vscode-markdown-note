@@ -1,40 +1,59 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
-const vscode_1 = require("vscode");
+const vscode = require("vscode");
 const NotePanel_1 = require("./panels/NotePanel");
+const reactive_monad_1 = require("./utilities/reactive_monad");
+const fs = require("node:fs/promises");
 function activate(context) {
+    var _a;
     console.log("!!!!!markdownnote Activated!!!!!");
-    const fileNameR = NotePanel_1.NotePanel.rFile();
-    const modeR = NotePanel_1.NotePanel.rMode();
-    const f = (mode) => () => {
-        var _a;
-        const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
-        !!fileName
-            ? (() => {
-                fileNameR.next(fileName);
-                NotePanel_1.NotePanel
-                    .render(context.extensionUri, fileName, mode);
-            })()
-            : undefined;
-        modeR.next(mode);
-    };
-    const f1 = f(1);
-    const f2 = f(2);
-    const overlayCommand = vscode_1.commands.registerCommand("markdownnote.overlay", f1);
-    const toSideCommand = vscode_1.commands.registerCommand("markdownnote.toSide", f2);
-    const doNothingCommand = vscode_1.commands.registerCommand("markdownnote.doNothing", () => { console.log("..."); });
-    // Add command to the extension context
-    context.subscriptions.push(overlayCommand);
-    context.subscriptions.push(toSideCommand);
-    context.subscriptions.push(doNothingCommand);
-    const overlay = vscode_1.workspace.getConfiguration("markdownnote.start_overlay");
+    const fileNameR = (0, reactive_monad_1.R)('');
+    const mdTextR = NotePanel_1.NotePanel.rMdText();
+    const saveR = NotePanel_1.NotePanel.rSave();
+    saveR.map(flag => flag
+        ? fs.writeFile(fileNameR.lastVal, mdTextR.lastVal)
+        : undefined);
+    const overlay = vscode.workspace.getConfiguration("markdownnote.start_overlay");
     console.log("%%%%% start_overlay ? %%%%%");
     console.log(overlay["true/false"]);
-    console.log("---------------");
-    overlay["true/false"]
-        ? f1() // single mode
-        : f2(); // open to the side
+    const modeR = (0, reactive_monad_1.R)(overlay["true/false"]
+        ? 1 // single mode
+        : 2 // open to the side
+    );
+    const f = (document) => !!document && document.languageId === 'markdown'
+        ? document.fileName !== fileNameR.lastVal
+            ? (() => {
+                console.log(document.fileName);
+                fileNameR.lastVal = document.fileName;
+                mdTextR.next(document.getText() // entire markdown text
+                );
+                modeR.lastVal === 1
+                    ? vscode.commands
+                        .executeCommand("markdownnote.overlay")
+                    : vscode.commands
+                        .executeCommand("markdownnote.toSide");
+            })()
+            : undefined
+        : undefined;
+    // a markdown document may be already opened in the activeTextEditor
+    f((_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document);
+    // a markdown document may be newly opened in the activeTextEditor
+    vscode.window.onDidChangeActiveTextEditor((evt) => f(evt === null || evt === void 0 ? void 0 : evt.document));
+    const doNothing = () => { console.log("..."); };
+    const doNothingCommand = vscode.commands.registerCommand("markdownnote.doNothing", doNothing);
+    const overlayCommand = vscode.commands.registerCommand("markdownnote.overlay", () => {
+        modeR.next(1); // switch mode to 1
+        NotePanel_1.NotePanel.render(context.extensionUri, 1);
+    });
+    const toSideCommand = vscode.commands.registerCommand("markdownnote.toSide", () => {
+        modeR.next(2); // switch mode to 2
+        NotePanel_1.NotePanel.render(context.extensionUri, 2);
+    });
+    // Add command to the extension context
+    context.subscriptions.push(doNothingCommand);
+    context.subscriptions.push(overlayCommand);
+    context.subscriptions.push(toSideCommand);
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

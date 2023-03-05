@@ -1,63 +1,88 @@
-import { commands, ExtensionContext, window, workspace, Uri }
-  from "vscode";
+import * as vscode from 'vscode';
 import { NotePanel } from "./panels/NotePanel";
 
 import type { Reactive, Monadic } from "./utilities/reactive_monad";
 import { R, monadic } from "./utilities/reactive_monad";
 
-export function activate(context: ExtensionContext) {
+import * as fs from "node:fs/promises";
+
+export function activate(context: vscode.ExtensionContext) {
 
   console.log("!!!!!markdownnote Activated!!!!!");
 
-  const fileNameR = NotePanel.rFile();
-  const modeR = NotePanel.rMode();
+  const fileNameR = R('');
 
-  const f = (mode: number) => () => {
-    const fileName =
-      window.activeTextEditor?.document.uri
-        .toString()
-        .split("file://")[1];
+  const mdTextR = NotePanel.rMdText();
 
-    !!fileName
-      ? (() => {
-        fileNameR.next(fileName);
-        NotePanel
-          .render(context.extensionUri, fileName, mode);
-      })()
-      : undefined;
-
-    modeR.next(mode);
-
-  };
-
-  const f1 = f(1);
-  const f2 = f(2);
-  const overlayCommand =
-    commands.registerCommand("markdownnote.overlay", f1);
-  const toSideCommand =
-    commands.registerCommand("markdownnote.toSide", f2);
-
-  const doNothingCommand =
-    commands.registerCommand("markdownnote.doNothing",
-      () => { console.log("..."); });
-
-  // Add command to the extension context
-  context.subscriptions.push(overlayCommand);
-  context.subscriptions.push(toSideCommand);
-
-  context.subscriptions.push(doNothingCommand);
+  const saveR = NotePanel.rSave();
+  saveR.map(
+    flag =>
+      flag
+        ? fs.writeFile(fileNameR.lastVal, mdTextR.lastVal)
+        : undefined
+  );
 
   const overlay =
-    workspace.getConfiguration("markdownnote.start_overlay");
+    vscode.workspace.getConfiguration("markdownnote.start_overlay");
 
   console.log("%%%%% start_overlay ? %%%%%");
   console.log(overlay["true/false"]);
-  console.log("---------------");
 
-  overlay["true/false"]
-    ? f1()  // single mode
-    : f2(); // open to the side
+  const modeR = R(
+    overlay["true/false"]
+      ? 1 // single mode
+      : 2 // open to the side
+  );
 
+  const f = (document: vscode.TextDocument | undefined) =>
 
+    !!document && document.languageId === 'markdown'
+      ? document.fileName !== fileNameR.lastVal
+        ? (() => {
+          console.log(document.fileName);
+          fileNameR.lastVal = document.fileName;
+
+          mdTextR.next(
+            document.getText() // entire markdown text
+          );
+
+          modeR.lastVal === 1
+            ? vscode.commands
+              .executeCommand("markdownnote.overlay")
+            : vscode.commands
+              .executeCommand("markdownnote.toSide");
+        })()
+        : undefined
+      : undefined;
+
+  // a markdown document may be already opened in the activeTextEditor
+  f(vscode.window.activeTextEditor?.document);
+  // a markdown document may be newly opened in the activeTextEditor
+  vscode.window.onDidChangeActiveTextEditor((evt) =>
+    f(evt?.document)
+  );
+
+  const doNothing = () => { console.log("..."); };
+  const doNothingCommand =
+    vscode.commands.registerCommand("markdownnote.doNothing",
+      doNothing);
+  const overlayCommand =
+    vscode.commands.registerCommand("markdownnote.overlay",
+      () => {
+        modeR.next(1); // switch mode to 1
+        NotePanel.render(context.extensionUri, 1);
+      }
+    );
+  const toSideCommand =
+    vscode.commands.registerCommand("markdownnote.toSide",
+      () => {
+        modeR.next(2); // switch mode to 2
+        NotePanel.render(context.extensionUri, 2);
+      }
+    );
+  // Add command to the extension context
+  context.subscriptions.push(doNothingCommand);
+  context.subscriptions.push(overlayCommand);
+  context.subscriptions.push(toSideCommand);
 
 }

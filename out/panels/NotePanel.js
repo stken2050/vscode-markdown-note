@@ -6,13 +6,11 @@ const getUri_1 = require("../utilities/getUri");
 const getNonce_1 = require("../utilities/getNonce");
 const reactive_monad_1 = require("../utilities/reactive_monad");
 const vscode = require("vscode");
-const fs = require("node:fs/promises");
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
-//issue: https://github.com/microsoft/vscode/issues/108868
-let isDuplicateEventClean = true;
-const fileNameR = (0, reactive_monad_1.R)('');
-const modeR = (0, reactive_monad_1.R)(1); //overlay:1, side:2
+const mdTextR = (0, reactive_monad_1.R)('');
+const saveR = (0, reactive_monad_1.R)(false);
+console.log("NodePanel imported");
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
  *
@@ -24,6 +22,12 @@ const modeR = (0, reactive_monad_1.R)(1); //overlay:1, side:2
  * - Setting message listeners so data can be passed between the webview and extension
  */
 class NotePanel {
+    static rMdText() {
+        return mdTextR;
+    }
+    static rSave() {
+        return saveR;
+    }
     /**
      * The NotePanel class private constructor (called only from the render method).
      *
@@ -32,6 +36,7 @@ class NotePanel {
      */
     constructor(panel, extensionUri) {
         this._disposables = [];
+        console.log("%%%%%% NodePanel Constructor is called");
         this._panel = panel;
         // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
         // the panel or when the panel is closed programmatically)
@@ -41,23 +46,14 @@ class NotePanel {
         // Set an event listener to listen for messages passed from the webview context
         this._setWebviewMessageListener(this._panel.webview);
     }
-    static rFile() {
-        return fileNameR;
-    }
-    static rMode() {
-        return modeR;
-    }
     /**
      * Renders the current webview panel if it exists otherwise a new webview panel
      * will be created and displayed.
      *
      * @param extensionUri The URI of the directory containing the extension.
      */
-    static render(extensionUri, fileName, mode) {
-        // the fileName that worked with webView becomes next fileNameR
-        fileNameR.next(fileName);
-        //can read fileName before onDidChangeActiveText event
-        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@@@@");
+    static render(extensionUri, mode) {
+        console.log("@@@@@@@@@@@@ webview @@@@@@@@@@@@@");
         (NotePanel.currentPanel)
             // If the webview panel already exists reveal it
             ? (() => {
@@ -126,6 +122,11 @@ class NotePanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Markdown Note</title>
+
+
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+
+
         </head>
         <body>
           <div id="root"></div>
@@ -142,36 +143,6 @@ class NotePanel {
      * @param context A reference to the extension context
      */
     _setWebviewMessageListener(webview) {
-        vscode_1.window.onDidChangeActiveTextEditor(() => {
-            var _a;
-            console.log("%%%%%onDidChangeActiveTextEditor%%%%%%%%%%%%");
-            const fileName = (_a = vscode_1.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.uri.toString().split("file://")[1];
-            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-            console.log(fileName);
-            console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-            !!fileName
-                ? fileName !== fileNameR.lastVal
-                    ? (() => {
-                        console.log("@@@@@@@@@@@@@@");
-                        console.log("to load !!");
-                        console.log(fileName);
-                        console.log("@@@@@@@@@@@@@@");
-                        isDuplicateEventClean
-                            ? (() => {
-                                //set timer----------------
-                                isDuplicateEventClean = false;
-                                setTimeout(() => isDuplicateEventClean = true, 500); //--------------------------
-                                modeR.lastVal === 1
-                                    ? vscode.commands
-                                        .executeCommand("markdownnote.overlay")
-                                    : vscode.commands
-                                        .executeCommand("markdownnote.toSide");
-                            })()
-                            : console.log("======duplicated Event!!");
-                    })()
-                    : undefined
-                : undefined;
-        });
         webview.onDidReceiveMessage((message) => {
             const command = message.command;
             const text = message.text;
@@ -192,19 +163,13 @@ class NotePanel {
                         cmd: 'imageRepository',
                         obj: imageRepository
                     });
-                    fs.readFile(fileNameR.lastVal, { encoding: "utf8" })
-                        .then(mdText => {
-                        webview
-                            .postMessage({
-                            cmd: 'load',
-                            obj: mdText
-                        });
-                    }).catch(err => {
-                        console.error(err);
+                    webview.postMessage({
+                        cmd: 'load',
+                        obj: mdTextR.lastVal
                     });
                     return;
                 case "save":
-                    const promise = fs.writeFile(fileNameR.lastVal, text);
+                    saveR.next(true);
                     return;
             }
         }, undefined, this._disposables);
