@@ -11,8 +11,8 @@ function activate(context) {
     const fileNameR = (0, reactive_monad_1.R)('');
     const mdTextR = NotePanel_1.NotePanel.rMdText();
     const saveR = NotePanel_1.NotePanel.rSave();
-    saveR.map(flag => flag
-        ? fs.writeFile(fileNameR.lastVal, mdTextR.lastVal)
+    saveR.map(text => text !== undefined
+        ? fs.writeFile(fileNameR.lastVal, text)
         : undefined);
     const overlay = vscode.workspace.getConfiguration("markdownnote.start_overlay");
     console.log("%%%%% start_overlay ? %%%%%");

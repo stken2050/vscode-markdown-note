@@ -16,9 +16,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   const saveR = NotePanel.rSave();
   saveR.map(
-    flag =>
-      flag
-        ? fs.writeFile(fileNameR.lastVal, mdTextR.lastVal)
+    text =>
+      text !== undefined
+        ? fs.writeFile(fileNameR.lastVal, text)
         : undefined
   );
 

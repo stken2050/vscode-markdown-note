@@ -9,7 +9,7 @@ const vscode = require("vscode");
 const reloadWebview = () => vscode.commands
     .executeCommand("workbench.action.webview.reloadWebviewAction");
 const mdTextR = (0, reactive_monad_1.R)('');
-const saveR = (0, reactive_monad_1.R)(false);
+const saveR = (0, reactive_monad_1.R)(undefined);
 console.log("NodePanel imported");
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -151,7 +151,7 @@ class NotePanel {
                     // Code that should run in response to the hello message command
                     vscode_1.window.showInformationMessage(text);
                     return;
-                case "requestLoad":
+                case "requestLoad": // (re)loaded webView request to load
                     console.log('webView: loaded and requestLoad!!!!!!!!!!!');
                     const keybinds = vscode.workspace.getConfiguration('markdownnote.webkeybindings');
                     const imageRepository = vscode.workspace.getConfiguration('markdownnote.image_repository');
@@ -166,10 +166,10 @@ class NotePanel {
                     webview.postMessage({
                         cmd: 'load',
                         obj: mdTextR.lastVal
-                    });
+                    }); // load from the source
                     return;
-                case "save":
-                    saveR.next(true);
+                case "save": // save to the source
+                    saveR.next(text);
                     return;
             }
         }, undefined, this._disposables);

@@ -12,7 +12,7 @@ const reloadWebview = () =>
     .executeCommand("workbench.action.webview.reloadWebviewAction");
 
 const mdTextR = R('');
-const saveR = R(false);
+const saveR = R(undefined);
 
 console.log("NodePanel imported");
 
@@ -183,7 +183,7 @@ export class NotePanel {
             window.showInformationMessage(text);
             return;
 
-          case "requestLoad":
+          case "requestLoad": // (re)loaded webView request to load
             console.log(
               'webView: loaded and requestLoad!!!!!!!!!!!'
             );
@@ -196,25 +196,25 @@ export class NotePanel {
               vscode.workspace.getConfiguration(
                 'markdownnote.image_repository');
 
-            webview.postMessage({
+            webview.postMessage({ // 1
               cmd: 'keybinds',
               obj: keybinds
             });
 
-            webview.postMessage({
+            webview.postMessage({ // 2
               cmd: 'imageRepository',
               obj: imageRepository
             });
 
-            webview.postMessage({
+            webview.postMessage({ // 3
               cmd: 'load',
               obj: mdTextR.lastVal
-            });
+            }); // load from the source
 
             return;
 
-          case "save":
-            saveR.next(true);
+          case "save": // save to the source
+            saveR.next(text);
             return;
 
         }
