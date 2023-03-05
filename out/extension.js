@@ -18,9 +18,8 @@ function activate(context) {
     console.log("%%%%% start_overlay ? %%%%%");
     console.log(overlay["true/false"]);
     const modeR = (0, reactive_monad_1.R)(overlay["true/false"]
-        ? 1 // single mode
-        : 2 // open to the side
-    );
+        ? 1
+        : 2);
     const f = (document) => !!document && document.languageId === 'markdown'
         ? document.fileName !== fileNameR.lastVal
             ? (() => {
@@ -38,6 +37,8 @@ function activate(context) {
         : undefined;
     // a markdown document may be already opened in the activeTextEditor
     f((_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document);
+    // to trigger in side-mode, need to focus the first pane
+    vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
     // a markdown document may be newly opened in the activeTextEditor
     vscode.window.onDidChangeActiveTextEditor((evt) => f(evt === null || evt === void 0 ? void 0 : evt.document));
     const doNothing = () => { console.log("..."); };
