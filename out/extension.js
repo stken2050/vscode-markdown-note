@@ -25,8 +25,6 @@ function activate(context) {
             ? (() => {
                 console.log(document.fileName);
                 fileNameR.lastVal = document.fileName;
-                mdTextR.next(document.getText() // entire markdown text
-                );
                 modeR.lastVal === 1
                     ? vscode.commands
                         .executeCommand("markdownnote.overlay")
@@ -44,10 +42,16 @@ function activate(context) {
     const doNothing = () => { console.log("..."); };
     const doNothingCommand = vscode.commands.registerCommand("markdownnote.doNothing", doNothing);
     const overlayCommand = vscode.commands.registerCommand("markdownnote.overlay", () => {
+        !!vscode.window.activeTextEditor
+            ? mdTextR.next(vscode.window.activeTextEditor.document.getText())
+            : undefined;
         modeR.next(1); // switch mode to 1
         NotePanel_1.NotePanel.render(context.extensionUri, 1);
     });
     const toSideCommand = vscode.commands.registerCommand("markdownnote.toSide", () => {
+        !!vscode.window.activeTextEditor
+            ? mdTextR.next(vscode.window.activeTextEditor.document.getText())
+            : undefined;
         modeR.next(2); // switch mode to 2
         NotePanel_1.NotePanel.render(context.extensionUri, 2);
     });
