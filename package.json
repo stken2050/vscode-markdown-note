@@ -2,7 +2,7 @@
   "name": "markdownnote",
   "displayName": "MarkdownNote",
   "description": "MarkdownNote(Markdown Preview & WYSIWYG Editor)",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/stken2050/vscode-markdown-note.git"
@@ -88,7 +88,6 @@
               "ctrlKey": true,
               "altKey": false,
               "code": [
-                "Backslash",
                 "Backspace",
                 "Escape"
               ]
@@ -125,12 +124,12 @@
                 "KeyI"
               ]
             },
-            "inlinecode": {
-              "shiftKey": false,
-              "ctrlKey": true,
-              "altKey": false,
-              "code": [
-                "KeyK"
+            "inlinecode":{
+              "shiftKey" : false,
+              "ctrlKey" : true,
+              "altKey" : false,
+              "code" : [
+                "Backquote"
               ]
             },
             "code": {
@@ -138,7 +137,7 @@
               "ctrlKey": true,
               "altKey": false,
               "code": [
-                "F1"
+                "KeyK"
               ]
             },
             "inlinemath": {
@@ -187,6 +186,11 @@
     },
     "keybindings": [
       {
+        "key": "escape",
+        "command": "markdownnote.doNothing",
+        "when": "activeWebviewPanelId == 'MarkdownNote'"
+      },
+      {
         "key": "ctrl+enter",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
@@ -198,11 +202,6 @@
       },
       {
         "key": "ctrl+backspace",
-        "command": "markdownnote.doNothing",
-        "when": "activeWebviewPanelId == 'MarkdownNote'"
-      },
-      {
-        "key": "ctrl+escape",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
@@ -227,12 +226,12 @@
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
       {
-        "key": "ctrl+k",
+        "key": "ctrl+`",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
       {
-        "key": "ctrl+f1",
+        "key": "ctrl+k",
         "command": "markdownnote.doNothing",
         "when": "activeWebviewPanelId == 'MarkdownNote'"
       },
