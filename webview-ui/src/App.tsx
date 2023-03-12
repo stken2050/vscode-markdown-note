@@ -50,11 +50,15 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 //=================================================================
 const hFont = {};
 
+// Abstract Cell ID list, update by .next() function
 const idsStream = R([]);
+// Solidjs Cell JSXElement list & update function
+const [cellsStream, cellsStreamNext] = createSignal([]);
+// there will be another Sortablejs Cell HTMLElement list
+
+// bridge between abstract ID and JSXElement of Cells
 const obtainIdFromCell = new Map();   // obtainIdFromCell.get(cell)
 const obtainCellFromId = new Map();   // obtainCellFromId.get(id)
-
-const [cellsStream, cellsStreamNext] = createSignal([]);
 
 const contentStreams = {};
 const textList = {};
@@ -67,7 +71,39 @@ const undoHistoryEdit = [];
 let imageRepository;
 let keybinds;
 
+let sortable = undefined;
+
 //==========================================
+
+const reflectDOM = (cells) => {
+
+  console.log("%%%%% reflectDOM");
+
+  const f = () => {
+    cellsStreamNext(cells); //reflect to DOM
+
+    const ff = () =>
+      sortable = Sortable.create(
+        document.getElementById('items'),
+        {
+          animation: 150,
+          ghostClass: "ghost",
+          onEnd: onSort
+        });
+
+        s
+
+    setTimeout(ff, 1000);
+  };
+
+  sortable === undefined
+    ? f()
+    : (() => {
+      (sortable as Sortable).destroy();
+      f();
+    })();
+
+};
 
 const newCellID = R('');
 
@@ -90,7 +126,7 @@ const addCell = ev => id => {
     idsStream.lastVal
       .map(id => obtainCellFromId.get(id));
 
-  cellsStreamNext(cells); //reflect to DOM
+  reflectDOM(cells);
 
   setTimeout(() => showEditFocus(newCellID.lastVal), 0);
 
@@ -119,7 +155,7 @@ const deleteCell = (ev) => id => {
     idsStream.lastVal
       .map(id => obtainCellFromId.get(id));
 
-  cellsStreamNext(cells); //reflect to DOM
+  reflectDOM(cells);
 
 };
 
@@ -734,14 +770,6 @@ const App: Component = () => {
 
       // Your code to run since DOM is loaded and ready
 
-      Sortable.create(
-        document.getElementById('items'),
-        {
-          animation: 150,
-          ghostClass: "ghost",
-          onEnd: onSort
-        });
-
       hFont[0] = getComputedStyle(document.getElementById('p')).font;
       hFont[1] = getComputedStyle(document.getElementById('h1')).font;
       hFont[2] = getComputedStyle(document.getElementById('h2')).font;
@@ -864,7 +892,7 @@ mdtextR
 
     console.log(ids);
 
-    cellsStreamNext(cells); // reflect to DOM
+    reflectDOM(cells);
   });
 //==========================================
 
