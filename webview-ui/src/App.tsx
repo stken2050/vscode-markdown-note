@@ -50,18 +50,11 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 //=================================================================
 const hFont = {};
 
-// Abstract Cell ID list, update by .next() function
-const idsStream = R([]);
-// Solidjs Cell JSXElement list & update function
 const [cellsStream, cellsStreamNext] = createSignal([]);
-// there will be another Sortablejs Cell HTMLElement list
-
-// bridge between abstract ID and JSXElement of Cells
-const obtainIdFromCell = new Map();   // obtainIdFromCell.get(cell)
-const obtainCellFromId = new Map();   // obtainCellFromId.get(id)
 
 const contentStreams = {};
 const textList = {};
+const ID = new Map(); //ID.get(cell)
 
 const deletingID = R(0);
 
@@ -71,62 +64,22 @@ const undoHistoryEdit = [];
 let imageRepository;
 let keybinds;
 
-let sortable = undefined;
-
 //==========================================
-
-const reflectDOM = (cells) => {
-
-  console.log("%%%%% reflectDOM");
-
-  const f = () => {
-    cellsStreamNext(cells); //reflect to DOM
-
-    const ff = () =>
-      sortable = Sortable.create(
-        document.getElementById('items'),
-        {
-          animation: 150,
-          ghostClass: "ghost",
-          onEnd: onSort
-        });
-
-        s
-
-    setTimeout(ff, 1000);
-  };
-
-  sortable === undefined
-    ? f()
-    : (() => {
-      (sortable as Sortable).destroy();
-      f();
-    })();
-
-};
 
 const newCellID = R('');
 
 const addCell = ev => id => {
   console.log('on addCell');
 
-  const newCell = Cell('');
+  const newCells = cells =>
+    cells.flatMap(
+      (cell) =>
+        id === ID.get(cell)
+          ? [cell, Cell('')]
+          : [cell]
+    );
 
-  const newIDs =
-    idsStream.lastVal
-      .flatMap(exsitingID =>
-        exsitingID === id
-          ? [exsitingID, obtainIdFromCell.get(newCell)] // add the id
-          : [exsitingID]
-      );
-
-  idsStream.next(newIDs);
-
-  const cells =
-    idsStream.lastVal
-      .map(id => obtainCellFromId.get(id));
-
-  reflectDOM(cells);
+  cellsStreamNext(cells => newCells(cells));
 
   setTimeout(() => showEditFocus(newCellID.lastVal), 0);
 
@@ -139,63 +92,78 @@ const deleteCell = (ev) => id => {
 
   upCell(ev)(id);
 
-  const newIDs =
-    idsStream.lastVal.length === 1
-      ? idsStream.lastVal // if only one left, preserve it
-      : idsStream.lastVal
-        .flatMap(exsitingID =>
-          exsitingID === id
-            ? [] // remove the id
-            : [exsitingID]
-        );
+  const newCells = cells =>
+    cells.flatMap(
+      cell =>
+        id === ID.get(cell)
+          ? []
+          : [cell]
+    );
 
-  idsStream.next(newIDs);
-
-  const cells =
-    idsStream.lastVal
-      .map(id => obtainCellFromId.get(id));
-
-  reflectDOM(cells);
+  cellsStream().length === 1
+    ? undefined
+    : cellsStreamNext(cells => newCells(cells));
 
 };
 
 const upCell = (ev) => id => {
   console.log('on upCell');
 
-  const f = (esistingID: number, i: number) =>
-    esistingID === id
-      ? i === 0 //cell is top
-        ? undefined
-        : (() => {
-          const targetID = idsStream.lastVal[i - 1];
-          setTimeout(() =>
-            showEditFocus(targetID), 100);
-          onBlur(ev)(id);
-        })()
+  const f = (cell: Element, i: number, cells: Element[]) => {
+
+    cell.id === id
+      ? (() => {
+
+        i === 0 //cell is top
+          ? undefined
+          : (() => {
+            const targetCell = cells[i - 1];
+            const targetID = ID.get(targetCell);
+            setTimeout(() =>
+              showEditFocus(targetID), 100);
+            onBlur(ev)(id);
+          })()
+      })()
       : undefined;
 
-  idsStream.lastVal.map(f);
+    return cell;
+  };
+
+  Array
+    .from(document.getElementsByClassName('cell'))
+    .map(f);
 
 };
 
 const downCell = (ev) => id => {
   console.log('on downCell');
 
-  const f = (esistingID: number, i: number) =>
-    esistingID === id
-      ? i === idsStream.lastVal.length - 1 //cell is buttom
-        ? undefined
-        : (() => {
-          const targetID = idsStream.lastVal[i + 1];
-          setTimeout(() =>
-            showEditFocus(targetID), 100);
-          onBlur(ev)(id);
-        })()
+  const f = (cell: Element, i: number, cells: Element[]) => {
+
+    cell.id === id
+      ? (() => {
+
+        i === Array.from(cells).length - 1 //cell is buttom
+          ? undefined
+          : (() => {
+            const targetCell = cells[i + 1];
+            const targetID = ID.get(targetCell);
+            setTimeout(() =>
+              showEditFocus(targetID), 100);
+            onBlur(ev)(id);
+          })()
+      })()
       : undefined;
 
-  idsStream.lastVal.map(f);
+    return cell;
+  };
+
+  Array
+    .from(document.getElementsByClassName('cell'))
+    .map(f);
 
 };
+
 
 const hStyle = idEdit => {
 
@@ -612,8 +580,7 @@ const Cell: Component = (text: string) => {
     </div>;
   //------------------------------------------------------
 
-  obtainIdFromCell.set(div, id);
-  obtainCellFromId.set(id, div);
+  ID.set(div, id);
 
   const initCell = () => {
     hStyle(idEdit);
@@ -731,23 +698,16 @@ const showEditFocus =
 
 //=================================================================
 
-type onSort = (event: Sortable.SortableEvent) => void;
-const onSort: onSort = evt => {
+
+const onSort = evt => {
   console.log('onSort');
 
-  const items = evt.to;
-  const cellEls = items.children;
-  const ids =
-    Array.from(cellEls)
-      .map(cellEl => cellEl.id);
+  console.log(evt.to);
 
-  console.log(ids);
-  idsStream.next(ids);
-
-  //no need to reflect to DOM because sortable did the job
 
   cellToMarkSave();
-};
+}
+
 
 
 const App: Component = () => {
@@ -769,6 +729,14 @@ const App: Component = () => {
       linkColor.forEach(l => l.addEventListener('click', colorLink))
 
       // Your code to run since DOM is loaded and ready
+
+      Sortable.create(
+        document.getElementById('items'),
+        {
+          animation: 150,
+          ghostClass: "ghost",
+          onEnd: onSort
+        });
 
       hFont[0] = getComputedStyle(document.getElementById('p')).font;
       hFont[1] = getComputedStyle(document.getElementById('h1')).font;
@@ -887,12 +855,8 @@ mdtextR
 
     console.log(cells);
 
-    const ids = cells.map(cell => obtainIdFromCell.get(cell));
-    idsStream.next(ids);
+    cellsStreamNext(cells); //update cells
 
-    console.log(ids);
-
-    reflectDOM(cells);
   });
 //==========================================
 
