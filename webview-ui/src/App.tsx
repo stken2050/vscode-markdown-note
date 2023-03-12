@@ -50,11 +50,14 @@ provideVSCodeDesignSystem().register(vsCodeButton());
 //=================================================================
 const hFont = {};
 
+const idsStream = R([]);
+const obtainIdFromCell = new Map();   // obtainIdFromCell.get(cell)
+const obtainCellFromId = new Map();   // obtainCellFromId.get(id)
+
 const [cellsStream, cellsStreamNext] = createSignal([]);
 
 const contentStreams = {};
 const textList = {};
-const ID = new Map(); //ID.get(cell)
 
 const deletingID = R(0);
 
@@ -71,15 +74,23 @@ const newCellID = R('');
 const addCell = ev => id => {
   console.log('on addCell');
 
-  const newCells = cells =>
-    cells.flatMap(
-      (el) =>
-        id === ID.get(el)
-          ? [el, Cell('')]
-          : [el]
-    );
+  const newCell = Cell('');
 
-  cellsStreamNext(cells => newCells(cells));
+  const newIDs =
+    idsStream.lastVal
+      .flatMap(exsitingID =>
+        exsitingID === id
+          ? [exsitingID, obtainIdFromCell.get(newCell)] // add the id
+          : [exsitingID]
+      );
+
+  idsStream.next(newIDs);
+
+  const cells =
+    idsStream.lastVal
+      .map(id => obtainCellFromId.get(id));
+
+  cellsStreamNext(cells); //reflect to DOM
 
   setTimeout(() => showEditFocus(newCellID.lastVal), 0);
 
@@ -88,96 +99,67 @@ const addCell = ev => id => {
 const deleteCell = (ev) => id => {
   console.log('on deleteCell');
 
+  deletingID.next(id);
+
   upCell(ev)(id);
 
-  const newCells = cells =>
-    cells.flatMap(
-      (el) =>
-        id === ID.get(el)
-          ? []
-          : [el]
-    );
+  const newIDs =
+    idsStream.lastVal.length === 1
+      ? idsStream.lastVal // if only one left, preserve it
+      : idsStream.lastVal
+        .flatMap(exsitingID =>
+          exsitingID === id
+            ? [] // remove the id
+            : [exsitingID]
+        );
 
-  cellsStream().length === 1
-    ? undefined
-    : cellsStreamNext(
-      cells => {
+  idsStream.next(newIDs);
 
-        deletingID.next(id);
-        return newCells(cells);
+  const cells =
+    idsStream.lastVal
+      .map(id => obtainCellFromId.get(id));
 
-      });
+  cellsStreamNext(cells); //reflect to DOM
 
 };
 
 const upCell = (ev) => id => {
   console.log('on upCell');
 
-  const f = (cell: Element, i: number, cells: Element[]) => {
-
-    cell.id === id
-      ? (() => {
-
-        console.log("cell count%%%%%%%%%%%%%%%%");
-        console.log(Array.from(cells).length - 1);
-        console.log(i);
-        console.log("%%%%%%%%%%%%%%%%%");
-
-        i === 0 //cell is top
-          ? undefined
-          : (() => {
-            const targetCell = cells[i - 1];
-            const targetID = ID.get(targetCell);
-            setTimeout(() =>
-              showEditFocus(targetID), 100);
-            onBlur(ev)(id);
-          })()
-      })()
+  const f = (esistingID: number, i: number) =>
+    esistingID === id
+      ? i === 0 //cell is top
+        ? undefined
+        : (() => {
+          const targetID = idsStream.lastVal[i - 1];
+          setTimeout(() =>
+            showEditFocus(targetID), 100);
+          onBlur(ev)(id);
+        })()
       : undefined;
 
-    return cell;
-  };
-
-  Array
-    .from(document.getElementsByClassName('cell'))
-    .map(f);
+  idsStream.lastVal.map(f);
 
 };
 
 const downCell = (ev) => id => {
   console.log('on downCell');
 
-  const f = (cell: Element, i: number, cells: Element[]) => {
-
-    cell.id === id
-      ? (() => {
-
-        console.log("cell count%%%%%%%%%%%%%%%%");
-        console.log(Array.from(cells).length - 1);
-        console.log(i);
-        console.log("%%%%%%%%%%%%%%%%%");
-
-        i === Array.from(cells).length - 1 //cell is buttom
-          ? undefined
-          : (() => {
-            const targetCell = cells[i + 1];
-            const targetID = ID.get(targetCell);
-            setTimeout(() =>
-              showEditFocus(targetID), 100);
-            onBlur(ev)(id);
-          })()
-      })()
+  const f = (esistingID: number, i: number) =>
+    esistingID === id
+      ? i === idsStream.lastVal.length - 1 //cell is buttom
+        ? undefined
+        : (() => {
+          const targetID = idsStream.lastVal[i + 1];
+          setTimeout(() =>
+            showEditFocus(targetID), 100);
+          onBlur(ev)(id);
+        })()
       : undefined;
 
-    return cell;
-  };
-
-  Array
-    .from(document.getElementsByClassName('cell'))
-    .map(f);
+  idsStream.lastVal.map(f);
 
 };
-
 
 const hStyle = idEdit => {
 
@@ -594,7 +576,8 @@ const Cell: Component = (text: string) => {
     </div>;
   //------------------------------------------------------
 
-  ID.set(div, id);
+  obtainIdFromCell.set(div, id);
+  obtainCellFromId.set(id, div);
 
   const initCell = () => {
     hStyle(idEdit);
@@ -712,12 +695,23 @@ const showEditFocus =
 
 //=================================================================
 
-
-const onSort = evt => {
+type onSort = (event: Sortable.SortableEvent) => void;
+const onSort: onSort = evt => {
   console.log('onSort');
-  cellToMarkSave();
-}
 
+  const items = evt.to;
+  const cellEls = items.children;
+  const ids =
+    Array.from(cellEls)
+      .map(cellEl => cellEl.id);
+
+  console.log(ids);
+  idsStream.next(ids);
+
+  //no need to reflect to DOM because sortable did the job
+
+  cellToMarkSave();
+};
 
 
 const App: Component = () => {
@@ -739,6 +733,14 @@ const App: Component = () => {
       linkColor.forEach(l => l.addEventListener('click', colorLink))
 
       // Your code to run since DOM is loaded and ready
+
+      Sortable.create(
+        document.getElementById('items'),
+        {
+          animation: 150,
+          ghostClass: "ghost",
+          onEnd: onSort
+        });
 
       hFont[0] = getComputedStyle(document.getElementById('p')).font;
       hFont[1] = getComputedStyle(document.getElementById('h1')).font;
@@ -857,18 +859,12 @@ mdtextR
 
     console.log(cells);
 
-    cellsStreamNext(cells); //update cells
+    const ids = cells.map(cell => obtainIdFromCell.get(cell));
+    idsStream.next(ids);
 
-    const f = () =>
-      Sortable.create(
-        document.getElementById('items'),
-        {
-          animation: 150,
-          ghostClass: "ghost",
-          onEnd: onSort
-        });
+    console.log(ids);
 
-    setTimeout(f, 0);
+    cellsStreamNext(cells); // reflect to DOM
   });
 //==========================================
 
